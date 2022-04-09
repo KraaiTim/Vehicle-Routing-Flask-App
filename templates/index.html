@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}
+Vehicle routing
+{% endblock %}
+
+{% block main %}
+
+<form id="formdata" action="/" method="POST">
+    <div class="container-fluid">
+        <div class="row mt-3">
+            <div class="col-6 px-4">
+                <label for="depot" class="form-label mb-0">Depot address</label>
+                <input type="text" class="form-control" id="depot" name="depot"
+                    placeholder="Type and select the depot address">
+                <input id="depot_lat" name="depot_lat" type="hidden">
+                <input id="depot_lng" name="depot_lng" type="hidden">
+            </div>
+            <div class="col-6 px-4">
+                <label for="numVehicles" class="form-label mb-0">Number of vehicles</label>
+                <input type="number" class="form-control mb-2" id="numVehicles" name="numVehicles" value="1" min="1"
+                    max="10">
+            </div>
+        </div>
+        <div class="row my-2">
+            <div class="col-6 px-4">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio1" value="random"
+                        checked="checked" onclick="showChecked()">
+                    <label class="form-check-label" for="inlineRadio1">X random Locations</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio2" value="file"
+                        onclick="showChecked()">
+                    <label class="form-check-label" for="inlineRadio2">File upload</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio3" value="typing"
+                        onclick="showChecked()">
+                    <label class="form-check-label" for="inlineRadio3">Type addresses</label>
+                </div>
+                <div class="row" name="RadioOptionsResults" style="display:block">
+                    <div class="col">
+                        <input type="number" class="form-control mb-2" id="numRandom" name="numRandom" value="10"
+                            min="1" max="150">
+                    </div>
+                </div>
+                <div class="row" name="RadioOptionsResults" style="display:none">
+                    <div class="col">
+                        <input class="form-control mb-2" type="file" id="formFile" name="formFile"
+                            accept=".xlsx,.xls,.csv">
+                    </div>
+                </div>
+                <div class="row" name="RadioOptionsResults" style="display:none">
+                    <div class="col">
+                        <input type="text" class="form-control mb-2" id="typeLocations" name="typeLocations">
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 px-4">
+                <label for="kmPrice" class="form-label mb-0">Price per km</label>
+                <input type="number" class="form-control mb-2" id="kmPrice" name="kmPrice" value="0.194" step="0.001">
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <button type="submit" class="btn btn-primary my-3 w-25">Create Route</button>
+        </div>
+    </div>
+    </div>
+</form>
+
+<hr class="solid">
+
+<div class="container" id="map">
+    {{ map | safe }}
+</div>
+
+{% if map is defined %}
+<script>
+    document.getElementById("map").scrollIntoView();
+    console.log("into view")
+</script>
+{% endif %}
+
+<script>
+    //Get Google Places API from Flask session and create script tag with API key
+    var googleplaces_api_key = "{{ session['googleplaces_api_key'] }}";
+    var stag = document.createElement('script');
+    stag.src = ("https://maps.googleapis.com/maps/api/js?key=" + googleplaces_api_key + "&libraries=places&callback=initAutocomplete")
+    stag.defer = true;
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.insertBefore(stag, firstScriptTag.nextSibling);
+</script>
+
+<script>
+    //Google Places Autocomplete API call
+    let autocomplete;
+    function initAutocomplete() {
+        autocomplete = new google.maps.places.Autocomplete(
+            document.getElementById('depot'),
+            {
+                componentRestrictions: { country: ['BE', 'NL'] },
+                fields: ['geometry']
+            });
+        autocomplete.addListener('place_changed', onPlaceChanged);
+    }
+    function onPlaceChanged() {
+        var place = autocomplete.getPlace();
+
+        if (!place.geometry) {
+            //User did not select a prediction; reset the input field
+            document.getElementById('autocomplete').placeholder =
+                'Enter a place';
+        } else {
+            //Display details about the valid place
+            let lat = place.geometry.location.lat(),
+                lng = place.geometry.location.lng();
+            document.getElementById('depot_lat').value = lat
+            document.getElementById('depot_lng').value = lng
+        }
+    }
+</script>
+
+<script>
+    function showChecked() {
+        var chboxs = document.getElementsByName("locationsRadio");
+        var results = document.getElementsByName("RadioOptionsResults");
+        for (var i = 0; i < chboxs.length; i++) {
+            // If the checkbox is checked, display the output text
+            if (chboxs[i].checked) {
+                results[i].style.display = "block";
+            } else {
+                results[i].style.display = "none";
+            }
+        }
+    }
+</script>
+{% endblock %}
