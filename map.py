@@ -74,7 +74,7 @@ def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
 
         # Create list of the coordinates of the locations on the route
         route_coords = []
-        for i in route_locs:
+        for i in route_locs["route"]:
             route_coords.append(points[i])
 
         coords_route = route(route_coords, api_key)
@@ -87,4 +87,4 @@ def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
 
     LayerControl(collapsed=False).add_to(m)
 
-    return m
+    return m, routes

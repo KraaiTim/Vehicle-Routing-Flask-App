@@ -72,14 +72,32 @@ Vehicle routing
 
 <hr class="solid">
 
+
+{% if map is defined %}
 <div class="container-fluid" id="map">
-    <div class="row"></div>
-    <div class="col-9">
-        {{ map | safe }}
+    <div class="row">
+        <div class="col-9">
+            {{ map | safe }}
+        </div>
+        <div class="col-3">
+            <table>
+                <tr>
+                    <th>Vehicle</th>
+                    <th>Route</th>
+                    <th>Cost</th>
+                </tr>
+                {% for route in routes %}
+                <tr>
+                    <td>{{ route["id"] }}</td>
+                    <td>{{ route["route"] }}</td>
+                    <td>{{ route["cost"] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
     </div>
 </div>
 
-{% if map is defined %}
 <script>
     document.getElementById("map").scrollIntoView();
     console.log("into view")

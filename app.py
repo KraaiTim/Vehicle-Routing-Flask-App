@@ -54,11 +54,10 @@ def home():
             if N_random != "":
                 # Get list of random coordinates from within NL
                 random_coordinates = random_coords(N_random)
-                print("ORS_key", ORS_api_key)
-                map = plotmap(depot_coords, random_coordinates,
-                              ORS_api_key, num_vehicles)
+                map, routes = plotmap(depot_coords, random_coordinates,
+                                      ORS_api_key, num_vehicles)
 
-        return render_template('index.html', map=map._repr_html_())
+        return render_template('index.html', map=map._repr_html_(), routes=routes)
     else:
         # If api keys are not set, redirect to keys
         if session.get('googleplaces_api_key') is None:
