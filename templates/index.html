@@ -72,8 +72,11 @@ Vehicle routing
 
 <hr class="solid">
 
-<div class="container" id="map">
-    {{ map | safe }}
+<div class="container-fluid" id="map">
+    <div class="row"></div>
+    <div class="col-9">
+        {{ map | safe }}
+    </div>
 </div>
 
 {% if map is defined %}

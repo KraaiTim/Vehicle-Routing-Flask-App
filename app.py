@@ -17,10 +17,12 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+ORS_api_key = ""
 
-def configure():
+
+def configure() -> str:
     load_dotenv()
-    session["openrouteservice_api_key"] = os.getenv("OPENROUTESERVICE_API_KEY")
+    return os.getenv('OPENROUTESERVICE_API_KEY')
 
 
 @app.route('/', methods=["GET", "POST"])
@@ -52,9 +54,9 @@ def home():
             if N_random != "":
                 # Get list of random coordinates from within NL
                 random_coordinates = random_coords(N_random)
-                print("random coordinats", random_coordinates)
+                print("ORS_key", ORS_api_key)
                 map = plotmap(depot_coords, random_coordinates,
-                              session.get('openrouteservice_api_key'), num_vehicles)
+                              ORS_api_key, num_vehicles)
 
         return render_template('index.html', map=map._repr_html_())
     else:
@@ -71,6 +73,8 @@ def set_api_keys():
     if request.method == "POST":
         session["googleplaces_api_key"] = request.form.get(
             "googleplaces_api_key")
+        ORS_api_key = request.form.get(
+            "openrouteservice_api_key")
         session["openrouteservice_api_key"] = request.form.get(
             "openrouteservice_api_key")
         return redirect('/')
@@ -85,5 +89,5 @@ def clear_session():
 
 
 if __name__ == '__main__':
-    configure()
+    ORS_api_key = configure()
     app.run(debug=True)
