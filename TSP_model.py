@@ -78,15 +78,20 @@ def TSPmodel(locations, api_key, num_vehicles=1):
             route_info["id"] = route_nbr
             index = routing.Start(route_nbr)
             route = [manager.IndexToNode(index)]
-            route_distance = 0
+            route_distance = []
+            total_route_distance = 0
             while not routing.IsEnd(index):
                 previous_index = index
                 index = solution.Value(routing.NextVar(index))
-                route_distance += routing.GetArcCostForVehicle(
+                route_cost = routing.GetArcCostForVehicle(
                     previous_index, index, route_nbr)
+                total_route_distance += routing.GetArcCostForVehicle(
+                    previous_index, index, route_nbr)
+                route_distance.append(route_cost)
                 route.append(manager.IndexToNode(index))
             route_info["route"] = route
-            route_info["cost"] = route_distance
+            route_info["route_cost"] = route_distance
+            route_info["cost"] = total_route_distance
             routes.append(route_info)
         return routes
 

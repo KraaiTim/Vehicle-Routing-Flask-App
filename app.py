@@ -42,6 +42,7 @@ def home():
                 "depot_lat")), float(request.form.get("depot_lng"))]
         else:
             depot_coords = [51.688193, 5.547352]
+        print(depot_coords)
 
         if num_vehicles != "":
             num_vehicles = int(num_vehicles)
@@ -60,7 +61,7 @@ def home():
         return render_template('index.html', map=map._repr_html_(), routes=routes)
     else:
         # If api keys are not set, redirect to keys
-        if session.get('googleplaces_api_key') is None:
+        if ORS_api_key is None:
             return redirect("/keys")
         else:
             return render_template('index.html')
@@ -70,8 +71,6 @@ def home():
 # Route to set the API keys
 def set_api_keys():
     if request.method == "POST":
-        session["googleplaces_api_key"] = request.form.get(
-            "googleplaces_api_key")
         ORS_api_key = request.form.get(
             "openrouteservice_api_key")
         session["openrouteservice_api_key"] = request.form.get(
