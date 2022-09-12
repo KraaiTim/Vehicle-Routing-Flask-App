@@ -37,11 +37,11 @@ def home():
         km_price = request.form.get("kmPrice")
 
         # Depot
-        if depot != "":
-            depot_coords = [float(request.form.get(
-                "depot_lat")), float(request.form.get("depot_lng"))]
-        else:
-            depot_coords = [51.688193, 5.547352]
+        # if depot != "":
+        #    depot_coords = [float(request.form.get(
+        #        "depot_lat")), float(request.form.get("depot_lng"))]
+        # else:
+        depot_coords = [51.688193, 5.547352]
         print(depot_coords)
 
         if num_vehicles != "":

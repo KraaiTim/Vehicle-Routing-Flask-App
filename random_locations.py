@@ -9,9 +9,9 @@ import os
 def random_coords(N_random: int) -> list:
     # Import shapefile
     myshp = open(
-        os.getcwd()+"\static\shapefiles\TM_WORLD_BORDERS-0.3.shp", "rb")
+        os.getcwd()+"/static/shapefiles/TM_WORLD_BORDERS-0.3.shp", "rb")
     mydbf = open(
-        os.getcwd()+"\static\shapefiles\TM_WORLD_BORDERS-0.3.dbf", "rb")
+        os.getcwd()+"/static/shapefiles/TM_WORLD_BORDERS-0.3.dbf", "rb")
     shapes = shapefile.Reader(shp=myshp, dbf=mydbf, encoding="latin1")
 
     # getting feature(s) that match the country name

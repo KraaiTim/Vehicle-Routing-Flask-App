@@ -28,7 +28,7 @@ def directions(api_key: str, coordinates: list):
 
     # If there is a point for which no routable point can be found within 350 meters, error 2010, return empty list
     if "error" in json.loads(call.text):
-        if json.loads(call.text)['error']['code'] == 2010:
+        if json.loads(call.text)['error']['code'] == 200:
             print(json.loads(call.text))
             return []
     else:
@@ -56,5 +56,4 @@ def matrix(api_key: str, locations: list, sources: list, destinations: list):
     }
     call = requests.post(
         'https://api.openrouteservice.org/v2/matrix/driving-car', json=body, headers=headers)
-
     return json.loads(call.text)

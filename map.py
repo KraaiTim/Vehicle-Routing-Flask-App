@@ -32,7 +32,7 @@ def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
         Polygon(polybounds, color="blue", weight=2,
                 fill_color="blue", fill_opacity=0.3).add_to(m)
 
-    fg_markers = FeatureGroup(name="Markers")
+    fg_markers = FeatureGroup(name="Locations")
 
     # Place markers on the Folium map with different icon for first point = depot
     for idx, p in enumerate(points):
