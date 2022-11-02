@@ -33,3 +33,13 @@
             document.getElementById('depot_lng').value = lng
         }
     }
+
+    /*
+    <div class="col-6 px-4">
+        <label for="depot" class="form-label mb-0">Depot address</label>
+        <input type="text" class="form-control" id="depot" name="depot"
+            placeholder="Type and select the depot address">
+        <input id="depot_lat" name="depot_lat" type="hidden">
+        <input id="depot_lng" name="depot_lng" type="hidden">
+    </div>
+    */

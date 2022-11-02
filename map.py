@@ -1,17 +1,24 @@
-from folium import FeatureGroup, LayerControl, Map, Marker, Polygon, Popup, Icon, PolyLine, TileLayer
-from folium import plugins
-import random
+from folium import (FeatureGroup, Icon, LayerControl, Map, Marker, Polygon,
+                    PolyLine, Popup, TileLayer)
 
-# Import TSP model
-from TSP_model import TSPmodel
 # Import route function
 from distance_matrix import route
+# Import TSP model
+from TSP_model import TSPmodel
 
 # TODO max number of directions API calls is 40 per minute. Check how to make the route
 
+
+def empty_map():
+    midpoint = [51.688193, 5.547352]
+    m = Map(location=midpoint, tiles=None, zoom_start=7,
+            control_scale=True, zoom_control=False)
+    TileLayer(tiles='OpenStreetMap', control=True).add_to(m)
+    LayerControl(collapsed=False).add_to(m)
+    return m
+
+
 # Function to draw the map, TSP, get route coordinates and draw the route.
-
-
 def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
 
     # Set midpoint as depot

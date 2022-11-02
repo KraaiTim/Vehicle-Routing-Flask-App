@@ -15,8 +15,12 @@ def TSPmodel(locations, api_key, num_vehicles=1):
         """Stores the distance matrix, depot and number of vehicles."""
         data = {}
         # Call distance matrix function on locations
+        # TODO multiply Distance Matrix by constant for cost per kilometer
         data['distance_matrix'] = distancematrix(locs, api_key)
         data['num_vehicles'] = num_vehicles
+        # TODO implement the different start points of vehicles, remove depot
+        #data['starts'] = [1, 2, 15, 16]
+        #data['ends'] = [0, 0, 0, 0]
         data['depot'] = 0
         return data
 
@@ -50,9 +54,16 @@ def TSPmodel(locations, api_key, num_vehicles=1):
     routing.AddDimension(
         distance_callback_index,
         0,  # no slack
+        # TODO Set maximum travel distance in Front End
         2000000,  # vehicle maximum travel distance in meters
         True,  # start cumul to zero
         dimension_name)
+    # TODO add penalty cost for missing a location. Can be different based on the country (add in front end).
+    # Allow to drop nodes.
+    # penalty = 1000
+    # for node in range(1, len(data['distance_matrix'])):
+    #    routing.AddDisjunction([manager.NodeToIndex(node)], penalty)
+
     distance_dimension = routing.GetDimensionOrDie(dimension_name)
     distance_dimension.SetGlobalSpanCostCoefficient(100)
 
@@ -66,7 +77,7 @@ def TSPmodel(locations, api_key, num_vehicles=1):
     if solution:
         print('Solution found!')
     else:
-        print('No solution found !')
+        print('No solution found!')
 
     def routes_info(solution, routing, manager):
         """Get vehicle routes from a solution and store them in an list of dictionaries."""

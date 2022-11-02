@@ -4,143 +4,75 @@
 Vehicle routing
 {% endblock %}
 
-{% block main %}
 
-<form id="formdata" action="/" method="POST">
-    <div class="container-fluid">
-        <div class="row mt-3">
-            <!--
-            <div class="col-6 px-4">
-                <label for="depot" class="form-label mb-0">Depot address</label>
-                <input type="text" class="form-control" id="depot" name="depot"
-                    placeholder="Type and select the depot address">
-                <input id="depot_lat" name="depot_lat" type="hidden">
-                <input id="depot_lng" name="depot_lng" type="hidden">
-            </div>
-            -->
-            <div class="col-6 px-4">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio1" value="random"
-                        checked="checked" onclick="showChecked()">
-                    <label class="form-check-label" for="inlineRadio1">X random Locations</label>
+{% block content %}
+{{ map | safe }}
+{% endblock %}
+
+
+{% block results %}
+<!-- Route results -->
+<div class="row justify-content-center">
+    <!--
+        <table>
+            <tr>
+                <th>Vehicle</th>
+                <th>Route</th>
+                <th>km's</th>
+            </tr>
+            {% for route in routes %}
+            <tr>
+                <td>{{ route["id"] + 1}}</td>
+                <td>{{ route["route"] }}</td>
+                <td>{{ '%0.2f' % (route["cost"] / 1000)|float }} kms</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <div id="accordion">
+            {% for route in routes %}
+            <div class="card">
+                <div class="card-header" id="headingOne">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne"
+                            aria-expanded="false" aria-controls="collapseOne">
+                            <span class="text-start">Vehicle {{ route["id"] + 1}}</span>
+                            <span class="text-end">{{ '%0.2f' % (route["cost"] / 1000)|float }} kms</span>
+                        </button>
+                    </h5>
                 </div>
-                <!--
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio2" value="file"
-                    onclick="showChecked()">
-                    <label class="form-check-label" for="inlineRadio2">File upload</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio3" value="typing"
-                    onclick="showChecked()">
-                    <label class="form-check-label" for="inlineRadio3">Type addresses</label>
-                </div>
-            -->
-                <div class="row" name="RadioOptionsResults" style="display:block">
-                    <div class="col">
-                        <input type="number" class="form-control mb-2" id="numRandom" name="numRandom" value="10"
-                            min="1" max="150">
+
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                    <div class="card-body">
+                        <table>
+                            <tr>
+                                <th>Location</th>
+                                <th>Address</th>
+                                <th>km's</th>
+                            </tr>
+                            {% for loc in route["route"] %}
+                            <tr>
+                                <td>{{ loc }}</td>
+                                <td>??</td>
+                                <td>{{ route["route_cost"]["{{loop.index}}"] }} kms</td>
+                            </tr>
+                            {% endfor %}
+                        </table>
                     </div>
                 </div>
-                <div class="row" name="RadioOptionsResults" style="display:none">
-                    <div class="col">
-                        <input class="form-control mb-2" type="file" id="formFile" name="formFile"
-                            accept=".xlsx,.xls,.csv">
-                    </div>
-                </div>
-                <div class="row" name="RadioOptionsResults" style="display:none">
-                    <div class="col">
-                        <input type="text" class="form-control mb-2" id="typeLocations" name="typeLocations">
-                    </div>
-                </div>
             </div>
-            <div class="col-6 px-4">
-                <label for="numVehicles" class="form-label mb-0">Number of vehicles</label>
-                <input type="number" class="form-control mb-2" id="numVehicles" name="numVehicles" value="1" min="1"
-                    max="10">
-            </div>
-            <div class="col-6 px-4" style="display: none">
-                <label for="kmPrice" class="form-label mb-0">Price per km</label>
-                <input type="number" class="form-control mb-2" id="kmPrice" name="kmPrice" value="0.194" step="0.001">
-            </div>
+            {% endfor %}
         </div>
-
-        <div class="row justify-content-center">
-            <button type="submit" class="btn btn-primary my-3 w-25">Create Route</button>
-        </div>
-    </div>
-    </div>
-</form>
-
-<hr class="solid">
-
-
-{% if map is defined %}
-<div class="container-fluid" id="map">
-    <div class="row">
-        <div class="col-9">
-            {{ map | safe }}
-        </div>
-        <div class="col-3">
-            <table>
-                <tr>
-                    <th>Vehicle</th>
-                    <th>Route</th>
-                    <th>km's</th>
-                </tr>
-                {% for route in routes %}
-                <tr>
-                    <td>{{ route["id"] + 1}}</td>
-                    <td>{{ route["route"] }}</td>
-                    <td>{{ '%0.2f' % (route["cost"] / 1000)|float }} kms</td>
-                </tr>
-                {% endfor %}
-            </table>
-
-            <div id="accordion">
-                {% for route in routes %}
-                <div class="card">
-                    <div class="card-header" id="headingOne">
-                        <h5 class="mb-0">
-                            <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne"
-                                aria-expanded="false" aria-controls="collapseOne">
-                                <span class="text-start">Vehicle {{ route["id"] + 1}}</span>
-                                <span class="text-end">{{ '%0.2f' % (route["cost"] / 1000)|float }} kms</span>
-                            </button>
-                        </h5>
-                    </div>
-
-                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-                        <div class="card-body">
-                            <table>
-                                <tr>
-                                    <th>Location</th>
-                                    <th>Address</th>
-                                    <th>km's</th>
-                                </tr>
-                                {% for loc in route["route"] %}
-                                <tr>
-                                    <td>{{ loc }}</td>
-                                    <td>??</td>
-                                    <td>{{ route["route_cost"]["{{loop.index}}"] }} kms</td>
-                                </tr>
-                                {% endfor %}
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-
-        </div>
-    </div>
+        -->
 </div>
+{% endblock %}
 
-<script>
-    document.getElementById("map").scrollIntoView();
-    console.log("into view")
-</script>
-{% endif %}
+
+<style type="text/css">
+    #radios {
+        display: block;
+    }
+</style>
 
 <script>
     function showChecked() {
@@ -156,4 +88,3 @@ Vehicle routing
         }
     }
 </script>
-{% endblock %}

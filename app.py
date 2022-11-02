@@ -1,11 +1,13 @@
-from flask_session import Session
-from flask import Flask, flash, redirect, render_template, request, session, jsonify, url_for
-from dotenv import load_dotenv
 import os
 
-from random_locations import random_coords
+from dotenv import load_dotenv
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   session, url_for)
 
-from map import plotmap
+from flask_session import Session
+from geocoding import read_addresses
+from map import empty_map, plotmap
+from random_locations import random_coords
 
 app = Flask(__name__)
 
@@ -16,6 +18,9 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+
+
+# GOAL of the application minimize the length of the longest single route among all vehicles
 
 ORS_api_key = ""
 
@@ -28,35 +33,18 @@ def configure() -> str:
 @app.route('/', methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        print(request.form)
-        depot = request.form.get("depot")
-        random_yesno = request.form.get("random")
-        file_name = request.form.get("formFile")
-        home_address = request.form.get("home")
-        num_vehicles = request.form.get("numVehicles")
-        km_price = request.form.get("kmPrice")
-
-        # Depot
-        # if depot != "":
-        #    depot_coords = [float(request.form.get(
-        #        "depot_lat")), float(request.form.get("depot_lng"))]
-        # else:
         depot_coords = [51.688193, 5.547352]
-        print(depot_coords)
 
         if num_vehicles != "":
             num_vehicles = int(num_vehicles)
         else:
             num_vehicles = 1
 
-        # Plot random map
-        if request.form.get("locationsRadio") == "random":
-            N_random = int(request.form.get("numRandom"))
-            if N_random != "":
-                # Get list of random coordinates from within NL
-                random_coordinates = random_coords(N_random)
-                map, routes = plotmap(depot_coords, random_coordinates,
-                                      ORS_api_key, num_vehicles)
+        coordinates = random_coords(20)
+
+        # plot maps
+        map, routes = plotmap(depot_coords, coordinates,
+                              ORS_api_key, num_vehicles)
 
         return render_template('index.html', map=map._repr_html_(), routes=routes)
     else:
@@ -64,7 +52,21 @@ def home():
         if ORS_api_key is None:
             return redirect("/keys")
         else:
-            return render_template('index.html')
+            map = empty_map()
+            return render_template('index.html', map=map._repr_html_())
+
+
+@app.route('/locations', methods=["GET", "POST"])
+def locations():
+    if request.method == "POST":
+        file = request.files["formFile"]
+        # Call function to extract addresses and return list of coordinates in [Lon, Lat]
+        df = read_addresses(file)
+        session["locations"] = [[df.loc[i, "Lon"], df.loc[i, "Lat"]]
+                                for i in range(len(df))]
+        return render_template('locations.html', locations=df)
+    else:
+        return render_template('locations.html')
 
 
 @app.route('/keys', methods=["GET", "POST"])
