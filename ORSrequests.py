@@ -1,6 +1,7 @@
 # Function for Directions and Matrix OpenRouteServices API calls
-import requests
 import json
+
+import requests
 
 # TODO add bike profile
 # TODO add counter to check for max 40 calls per minute

@@ -18,6 +18,28 @@ def empty_map():
     return m
 
 
+def locations_map(depot, points):
+    midpoint = [51.688193, 5.547352]
+    m = Map(location=midpoint, tiles=None, zoom_start=7,
+            control_scale=True, zoom_control=False)
+    TileLayer(tiles='OpenStreetMap', control=True).add_to(m)
+
+    fg_depots = FeatureGroup(name="Depot")
+    Marker(location=depot, popup=Popup("ID: {}".format(0)), icon=Icon(
+        color="green", icon='home', prefix='fa')).add_to(fg_depots)
+    fg_depots.add_to(m)
+
+    fg_locations = FeatureGroup(name="Locations")
+    # Place markers on the Folium map with different icon for first point = depot
+    for idx, p in enumerate(points):
+        Marker(location=list(reversed(p)), popup=Popup(
+            "ID: {}".format(idx)), color="blue").add_to(fg_locations)
+    fg_locations.add_to(m)
+
+    LayerControl(collapsed=False).add_to(m)
+    return m
+
+
 # Function to draw the map, TSP, get route coordinates and draw the route.
 def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
 

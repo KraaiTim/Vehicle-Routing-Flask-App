@@ -1,9 +1,10 @@
 # Generate random points within the shapefile of the Netherlands and calculate route
-import re
-import random
-import shapefile
-from shapely.geometry import shape, Point
 import os
+import random
+import re
+
+import shapefile
+from shapely.geometry import Point, shape
 
 
 def random_coords(N_random: int) -> list:

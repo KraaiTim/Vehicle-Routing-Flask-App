@@ -5,70 +5,76 @@ Vehicle routing
 {% endblock %}
 
 {% block content %}
+<div class="row">
+    <div class="col">
+        <div class="float-begin">
+            <form>
+                <button type="button" class="btn btn-outline-secondary mt-2"
+                    onClick="location.href='/'">&times;</button>
+            </form>
+        </div>
+    </div>
+</div>
 
-<!--
-<form id="formdata" action="/" method="POST" enctype="multipart/form-data">
+<hr class="solid">
 
-    <div class="col-6 px-4" id="radios">
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio1" value="random"
-                checked="checked" onclick="showChecked()">
-            <label class="form-check-label" for="inlineRadio1">X random Locations</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio2" value="file"
-                onclick="showChecked()">
-            <label class="form-check-label" for="inlineRadio2">File upload</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio3" value="typing"
-                onclick="showChecked()">
-            <label class="form-check-label" for="inlineRadio3">Type addresses</label>
-        </div>
-        <div class="row" name="RadioOptionsResults" style="display:block">
-            <div class="col">
-                <input type="number" class="form-control mb-2" id="numRandom" name="numRandom" value="10" min="1"
-                    max="150">
+<div class="container-fluid">
+
+    <form id="formdata" action="/" method="POST" enctype="multipart/form-data">
+
+        <div class="px-4" id="radios">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio1" value="random"
+                    checked="checked" onclick="showChecked()">
+                <label class="form-check-label" for="inlineRadio1">X random Locations</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="locationsRadio" id="inlineRadio2" value="file"
+                    onclick="showChecked()">
+                <label class="form-check-label" for="inlineRadio2">File upload</label>
+            </div>
+            <!-- Random locations result -->
+            <div class="row" name="RadioOptionsResults" style="display:block">
+                <div class="col mt-2">
+                    <label for="randomRange" class="form-label">Number of random locations:</label>
+                    <div class="row">
+                        <div id="randomrange">
+                            <span class="px-1">1</span>
+                            <input type="range" class="form-range" min="1" max="100" step="1" value="10"
+                                id="randomRange" name="randomRange" oninput="numberrandom.innerText = this.value">
+                            <span class="px-1">100</span>
+                        </div>
+                        <style>
+                            #randomrange {
+                                display: inherit;
+                            }
+                        </style>
+                    </div>
+                    <div class="row">
+                        <p>Locations: <b><span id="numberrandom">10</span></b></p>
+                    </div>
+                </div>
+                <div class="row justify-content-center">
+                    <button type="submit" class="btn btn-primary w-25">Randomly select locations</button>
+                </div>
+            </div>
+            <!-- File upload result -->
+            <div class="row" name="RadioOptionsResults" style="display:none">
+                <div class="col">
+                    <div class="container-fluid">
+                        <div class="row justify-content-center">
+                            <input class="form-control mb-2" type="file" id="formFile" name="formFile"
+                                accept=".xlsx,.xls,.csv">
+                            <button type="submit" class="btn btn-primary my-3 w-25">Upload and determine Lat &
+                                Long</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="row" name="RadioOptionsResults" style="display:none">
-            <div class="col">
-                <a href="/locations">Locations</a>
-                        
-                        <input class="form-control mb-2" type="file" id="formFile" name="formFile"
-                            accept=".xlsx,.xls,.csv">
-            </div>
-        </div>
-        <div class="row" name="RadioOptionsResults" style="display:none">
-            <div class="col">
-                <input type="text" class="form-control mb-2" id="typeLocations" name="typeLocations">
-            </div>
-        </div>
-    </div>
-    <div class="col-6 px-4">
-        <label for="numVehicles" class="form-label mb-0">Number of vehicles</label>
-        <input type="number" class="form-control mb-2" id="numVehicles" name="numVehicles" value="1" min="1" max="10">
-    </div>
-    <div class="col-6 px-4" style="display: none">
-        <label for="kmPrice" class="form-label mb-0">Price per km</label>
-        <input type="number" class="form-control mb-2" id="kmPrice" name="kmPrice" value="0.194" step="0.001">
-    </div>
+    </form>
+</div>
 
-    <div class="row justify-content-center">
-        <button type="submit" class="btn btn-primary my-3 w-25">Create Route</button>
-    </div>
-</form>
--->
-
-
-<form id="formdata" action="/locations" method="POST" enctype="multipart/form-data">
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <input class="form-control mb-2" type="file" id="formFile" name="formFile" accept=".xlsx,.xls,.csv">
-            <button type="submit" class="btn btn-primary my-3 w-25">Upload and determine Lat & Long</button>
-        </div>
-    </div>
-</form>
 {% if locations is defined %}
 <div class="container-fluid">
     <div class="row justify-content-center">
@@ -99,5 +105,20 @@ Vehicle routing
     </div>
 </div>
 {% endif %}
+
+<script>
+    function showChecked() {
+        var chboxs = document.getElementsByName("locationsRadio");
+        var results = document.getElementsByName("RadioOptionsResults");
+        for (var i = 0; i < chboxs.length; i++) {
+            // If the checkbox is checked, display the output text
+            if (chboxs[i].checked) {
+                results[i].style.display = "block";
+            } else {
+                results[i].style.display = "none";
+            }
+        }
+    }
+</script>
 
 {% endblock %}

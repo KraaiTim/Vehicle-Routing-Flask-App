@@ -1,6 +1,5 @@
 # Import solver from Google OR-Tools
-from ortools.constraint_solver import routing_enums_pb2
-from ortools.constraint_solver import pywrapcp
+from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 # Import Distance matrix function
 from distance_matrix import distancematrix

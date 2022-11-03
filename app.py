@@ -6,7 +6,7 @@ from flask import (Flask, flash, jsonify, redirect, render_template, request,
 
 from flask_session import Session
 from geocoding import read_addresses
-from map import empty_map, plotmap
+from map import empty_map, locations_map, plotmap
 from random_locations import random_coords
 
 app = Flask(__name__)
@@ -34,19 +34,34 @@ def configure() -> str:
 def home():
     if request.method == "POST":
         depot_coords = [51.688193, 5.547352]
+        # TODO remove num vehicles
+        num_vehicles = 1
 
-        if num_vehicles != "":
-            num_vehicles = int(num_vehicles)
-        else:
-            num_vehicles = 1
+        print(request.form)
 
-        coordinates = random_coords(20)
+        if request.form.get("locationsRadio") == "random":
+            num_locations = int(request.form.get("randomRange"))
+            coordinates = random_coords(num_locations)
+
+            session["method"] = "random"
+            session["qty"] = num_locations
+            location_data = {
+                "method": session["method"], "#locations": session["qty"]}
+
+        elif request.form.get("locationsRadio") == "file":
+            file = request.files["formFile"]
+            df = read_addresses(file)
+            coordinates = [[df.loc[i, "Lon"], df.loc[i, "Lat"]]
+                           for i in range(len(df))]
+            session["method"] = "file"
+            session["qty"] = len(df.index)
+            location_data = {
+                "method": session["method"], "#locations": session["qty"]}
 
         # plot maps
-        map, routes = plotmap(depot_coords, coordinates,
-                              ORS_api_key, num_vehicles)
-
-        return render_template('index.html', map=map._repr_html_(), routes=routes)
+        # TODO change the map to only locations
+        map = locations_map(depot_coords, coordinates)
+        return render_template('index.html', map=map._repr_html_(), locations=location_data)
     else:
         # If api keys are not set, redirect to keys
         if ORS_api_key is None:
@@ -56,17 +71,9 @@ def home():
             return render_template('index.html', map=map._repr_html_())
 
 
-@app.route('/locations', methods=["GET", "POST"])
+@app.route('/locations', methods=["GET"])
 def locations():
-    if request.method == "POST":
-        file = request.files["formFile"]
-        # Call function to extract addresses and return list of coordinates in [Lon, Lat]
-        df = read_addresses(file)
-        session["locations"] = [[df.loc[i, "Lon"], df.loc[i, "Lat"]]
-                                for i in range(len(df))]
-        return render_template('locations.html', locations=df)
-    else:
-        return render_template('locations.html')
+    return render_template('locations.html')
 
 
 @app.route('/keys', methods=["GET", "POST"])

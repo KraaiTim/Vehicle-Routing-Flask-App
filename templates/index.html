@@ -73,18 +73,3 @@ Vehicle routing
         display: block;
     }
 </style>
-
-<script>
-    function showChecked() {
-        var chboxs = document.getElementsByName("locationsRadio");
-        var results = document.getElementsByName("RadioOptionsResults");
-        for (var i = 0; i < chboxs.length; i++) {
-            // If the checkbox is checked, display the output text
-            if (chboxs[i].checked) {
-                results[i].style.display = "block";
-            } else {
-                results[i].style.display = "none";
-            }
-        }
-    }
-</script>
