@@ -39,7 +39,7 @@ def random_coords(N_random: int) -> list:
 
     points = []
     for i in range(N_random):
-        #Points in [Long, Lat]
-        points.append(list(random_point_in_country(shp_geom)[0]))
+        # Reverse points from [Long, Lat] to [Lat, Long]
+        points.append(list(reversed(random_point_in_country(shp_geom)[0])))
 
     return points

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}
+Vehicle routing
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col">
+        <div class="float-begin">
+            <form>
+                <button type="button" class="btn btn-outline-secondary mt-2"
+                    onClick="location.href='/'">&times;</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<hr class="solid">
+
+<div class="container-fluid">
+    <form id="depots" action="/" method="POST">
+        <div class="col-6 px-4">
+            <label for="depot" class="form-label mb-0">Depot address</label>
+            <input type="text" class="form-control" id="depot" name="depot"
+                placeholder="Type and select the depot address" onchange="onAddressChange()">
+            <input id="depot_lat" name="depot_lat">
+            <input id="depot_long" name="depot_long">
+        </div>
+        <button class="btn btn-primary my-3 w-25" type="submit" name="depot">Save depot</button>
+    </form>
+</div>
+
+
+<script type="text/javascript">
+
+    //Implement Throttle
+
+    const autocomplete_api = async (address, api_key) => {
+        let encoded_address = encodeURIComponent(address);
+        let url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${api_key}&text=${encoded_address}`
+
+        // GET Request.
+        const response = await fetch(url);
+        console.log(response.headers);
+        const data = await response.json();
+
+        return data;
+    }
+
+    api_key = '{{ ORS_api_key }}';
+
+    function onAddressChange() {
+        addres_input = document.getElementById('depot');
+        // Call API
+        (async () => {
+            // Perform actions here inside the async function
+            body = await autocomplete_api(addres_input.value, api_key);
+            /*
+            results = document.createElement('div');
+            results.innerHTML = `<div id="loc-container"
+            style="width: 215px; position: absolute; left: 260px; top: 141px; display: none;">
+            </div>`
+            addres_input.after(results);
+            results = document.getElementById('loc-container');
+            body["features"].forEach(element => {
+                results.innerHTML += `<div class="loc-item"><span class="loc-icon loc-icon-marker"></span><span class="loc-item-query"><span
+                class="loc-matched">${element["properties"]["name"]}</span>${element["properties"]["locality"]}</span><span>${element["properties"]["country"]}</span></div>`
+            });
+            //[0] is Longitude and [1] is latitude
+            */
+            console.log(body);
+            coords = body["features"][0]["geometry"]["coordinates"];
+            document.getElementById('depot_long').value = coords[0];
+            document.getElementById('depot_lat').value = coords[1];
+        })(addres_input, api_key)
+    }
+
+</script>
+
+{% endblock %}

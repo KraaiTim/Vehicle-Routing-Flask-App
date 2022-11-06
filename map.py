@@ -25,15 +25,16 @@ def locations_map(depot, points):
     TileLayer(tiles='OpenStreetMap', control=True).add_to(m)
 
     fg_depots = FeatureGroup(name="Depot")
-    Marker(location=depot, popup=Popup("ID: {}".format(0)), icon=Icon(
+    Marker(location=depot, popup=Popup("{}".format(
+        ["{:.5}".format(float(coord)) for coord in depot])), icon=Icon(
         color="green", icon='home', prefix='fa')).add_to(fg_depots)
     fg_depots.add_to(m)
 
     fg_locations = FeatureGroup(name="Locations")
     # Place markers on the Folium map with different icon for first point = depot
     for idx, p in enumerate(points):
-        Marker(location=list(reversed(p)), popup=Popup(
-            "ID: {}".format(idx)), color="blue").add_to(fg_locations)
+        Marker(location=p, popup=Popup("{}".format(
+            ["{:.5}".format(float(coord)) for coord in p])), color="blue").add_to(fg_locations)
     fg_locations.add_to(m)
 
     LayerControl(collapsed=False).add_to(m)
@@ -44,7 +45,7 @@ def locations_map(depot, points):
 def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
 
     # Set midpoint as depot
-    points = [list(reversed(depot))] + points
+    points = [depot] + points
 
     # Create map
     # for titles also optional use "OpenStreetMap", "cartodbpositron"
@@ -66,10 +67,10 @@ def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
     # Place markers on the Folium map with different icon for first point = depot
     for idx, p in enumerate(points):
         if idx == 0:
-            Marker(location=list(reversed(p)), popup=Popup("ID: {}".format(idx)), icon=Icon(
+            Marker(location=p, popup=Popup("ID: {}".format(idx)), icon=Icon(
                 color="green", icon='home', prefix='fa')).add_to(fg_markers)
         else:
-            Marker(location=list(reversed(p)), popup=Popup(
+            Marker(location=p, popup=Popup(
                 "ID: {}".format(idx)), color="blue").add_to(fg_markers)
 
     fg_markers.add_to(m)
@@ -109,8 +110,8 @@ def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
         coords_route = route(route_coords, api_key)
 
         for i in range(len(route_coords)-1):
-            PolyLine(locations=[list(reversed(
-                coord)) for coord in coords_route], color=colors[route_id]).add_to(fg_route)
+            PolyLine(locations=[coords_route],
+                     color=colors[route_id]).add_to(fg_route)
 
         fg_route.add_to(m)
 

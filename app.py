@@ -33,55 +33,91 @@ def configure() -> str:
 @app.route('/', methods=["GET", "POST"])
 def home():
     if request.method == "POST":
-        depot_coords = [51.688193, 5.547352]
-        # TODO remove num vehicles
+        # TODO remove num vehicles and set max 15
         num_vehicles = 1
 
+        inputs = session["inputs"]
         print(request.form)
-
-        if request.form.get("locationsRadio") == "random":
-            num_locations = int(request.form.get("randomRange"))
-            coordinates = random_coords(num_locations)
-
-            session["method"] = "random"
-            session["qty"] = num_locations
-            location_data = {
-                "method": session["method"], "#locations": session["qty"]}
-
-        elif request.form.get("locationsRadio") == "file":
-            file = request.files["formFile"]
-            df = read_addresses(file)
-            coordinates = [[df.loc[i, "Lon"], df.loc[i, "Lat"]]
-                           for i in range(len(df))]
-            session["method"] = "file"
-            session["qty"] = len(df.index)
-            location_data = {
-                "method": session["method"], "#locations": session["qty"]}
-
-        # plot maps
-        # TODO change the map to only locations
-        map = locations_map(depot_coords, coordinates)
-        return render_template('index.html', map=map._repr_html_(), locations=location_data)
+        if "locations" in request.form:
+            if request.form.get("locationsRadio") == "random":
+                num_locations = int(request.form.get("randomRange"))
+                coordinates = random_coords(num_locations)
+                # Update inputs
+                inputs = session["inputs"]
+                inputs["method"] = "random"
+                inputs["locations"] = num_locations
+                inputs["location_coords"] = coordinates
+            elif request.form.get("locationsRadio") == "file":
+                file = request.files["formFile"]
+                df = read_addresses(file)
+                coordinates = [[df.loc[i, "Lat"], df.loc[i, "Lon"]]
+                               for i in range(len(df))]
+                # Update inputs
+                inputs = session["inputs"]
+                inputs["method"] = "file"
+                inputs["locations"] = len(df.index)
+                inputs["location_coords"] = coordinates
+            # If depot not defined, set standard value
+            if "depot" not in inputs:
+                inputs["depot"] = [51.688193, 5.547352]
+            # Store updated inputs in session
+            session["inputs"] = inputs
+            # plot maps
+            map = locations_map(inputs["depot"], inputs["location_coords"])
+            return render_template('index.html', map=map._repr_html_(), inputs=inputs)
+        elif "depot" in request.form:
+            # TODO change for multiple depots
+            inputs = session["inputs"]
+            inputs["depot"] = [float(request.form.get("depot_lat")), float(
+                request.form.get("depot_long"))]
+            session["inputs"] = inputs
+            # plot maps
+            map = locations_map(inputs["depot"], inputs["location_coords"])
+            return render_template('index.html', map=map._repr_html_(),  inputs=inputs)
     else:
         # If api keys are not set, redirect to keys
         if ORS_api_key is None:
             return redirect("/keys")
         else:
+            inputs = {}
+            session["inputs"] = inputs
             map = empty_map()
-            return render_template('index.html', map=map._repr_html_())
+            return render_template('index.html', map=map._repr_html_(), inputs=inputs)
 
 
 @app.route('/locations', methods=["GET"])
 def locations():
-    return render_template('locations.html')
+    inputs = session["inputs"]
+    return render_template('locations.html', inputs=inputs)
+
+
+@app.route('/depots', methods=["GET"])
+def depots():
+    inputs = session["inputs"]
+    #ORS_api_key = session["openrouteservice_api_key"]
+    return render_template('depots.html', ORS_api_key=ORS_api_key, inputs=inputs)
+
+
+@app.route('/google', methods=["GET"])
+def google():
+    inputs = session["inputs"]
+    return render_template('google.html', inputs=inputs)
+
+
+@app.route('/calculateroute', methods=["GET"])
+def calculateroute():
+    inputs = session["inputs"]
+    # 1. Use all inputs to calculate the route
+    # 2. While calculating, show progress bar with
+    # 3. When route determined, redirect to index
+    # 4. On index show map
+    # 5. Below map show the totals and the locations per vehicle
 
 
 @app.route('/keys', methods=["GET", "POST"])
 # Route to set the API keys
 def set_api_keys():
     if request.method == "POST":
-        ORS_api_key = request.form.get(
-            "openrouteservice_api_key")
         session["openrouteservice_api_key"] = request.form.get(
             "openrouteservice_api_key")
         return redirect('/')

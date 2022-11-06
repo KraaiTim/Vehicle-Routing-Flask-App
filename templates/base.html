@@ -31,60 +31,73 @@
     <main class="container-fluid">
         <div class="row">
             <div class="col-3">
-                {% if locations is defined %}
-                <div class="row justify-content-center">
-                    <h3 class="text-center">Locations</h3>
-                    <span class="text-center">
-                        <h6>Method: {{ locations["method"] }}</h6>
-                    </span>
-                    <span class="text-center">
-                        <h6>#Locations: {{ locations["#locations"] }}</h6>
-                    </span>
-                    <button class="btn btn-primary px-3 w-50" onClick="location.href='{{ url_for('locations') }}';"
-                        type="button">Load
-                        new locations</button>
+                <div class="container-fluid">
+                    {% if inputs["locations"] is defined %}
+                    <div class="row justify-content-center">
+                        <h4 class="text-center">Locations</h4>
+                        <span class="text-center">
+                            <h6>Method: {{ inputs["method"] }}</h6>
+                        </span>
+                        <span class="text-center">
+                            <h6>#Locations: {{ inputs["locations"] }}</h6>
+                        </span>
+                        <button class="btn btn-primary px-3 w-75" onClick="location.href='{{ url_for('locations') }}';"
+                            type="button">Load
+                            new locations</button>
 
+                    </div>
+                    <hr class="solid">
+                    {% else %}
+                    <div class="row justify-content-center">
+                        <h4 class="text-center">Locations</h4>
+                        <button class="btn btn-primary px-3 w-75" onClick="location.href='{{ url_for('locations') }}';"
+                            type="button">Load
+                            locations</button>
+                    </div>
+                    <hr class="solid">
+                    {% endif %}
+                    <!-- Depots page -->
+                    <!-- TODO Add possibility to add more depots -->
+                    {% if inputs["depot"] is defined %}
+                    <div class="row justify-content-center">
+                        <h4 class="text-center">Depot</h4>
+                        <span class="text-center">
+                            <h6>Latitude: {{ inputs["depot"][0] }}</h6>
+                            <h6>Longitude: {{ inputs["depot"][1] }}</h6>
+                        </span>
+                        <button class="btn btn-primary px-3 w-75" onClick="location.href='{{ url_for('depots') }}';"
+                            type="button">Set depot</button>
+                    </div>
+                    <hr class="solid">
+                    {% else %}
+                    <div class="row justify-content-center">
+                        <h4 class="text-center">Depot</h4>
+                        <button class="btn btn-primary px-3 w-75" onClick="location.href='{{ url_for('depots') }}';"
+                            type="button">Set depot</button>
+                    </div>
+                    <hr class="solid">
+                    {% endif %}
+
+                    {% if parameters is defined %}
+
+                    {% else %}
+
+
+                    <div class="row justify-content-center">
+                        <h4 class="text-center">Parameters</h4>
+                        <form class="form" action="/" autocomplete="off" spellcheck="false" method="POST">
+                            <label for="kmprice">Price per KM</label>
+                            <input type="text" class="form-control w-50" id="kmprice" name="kmprice">
+                            <label for="missedlocation">Cost per missed location</label>
+                            <input type="text" class="form-control w-50" id="missedlocation" name="missedlocation">
+                            <div class="row justify-content-center">
+                                <button type="submit" class="btn btn-primary my-3 w-75">Set parameters</button>
+                            </div>
+                        </form>
+                    </div>
+                    <hr class="solid">
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="row justify-content-center">
-                    <h3 class="text-center">Locations</h3>
-                    <button class="btn btn-primary px-3 w-50" onClick="location.href='{{ url_for('locations') }}';"
-                        type="button">Load
-                        locations</button>
-                </div>
-                {% endif %}
-                <hr class="solid">
-                <!-- Depots page -->
-                {% if depots is defined %}
-
-                {% else %}
-                <div class="row justify-content-center">
-                    <h3 class="text-center">Start location(s)</h3>
-                    <button class="btn btn-primary px-3 w-50" onClick="location.href='{{ url_for('locations') }}';"
-                        type="button">Set start
-                        location(s)</button>
-                </div>
-                <hr class="solid">
-                {% endif %}
-
-                {% if parameters is defined %}
-
-                {% else %}
-
-                <div class="row ustify-content-center">
-                    <h3 class="text-center">Parameters</h3>
-                    <form class="form" action="/" autocomplete="off" spellcheck="false" method="POST">
-                        <label for="kmprice">Price per KM</label>
-                        <input type="text" class="form-control w-50" id="kmprice" name="kmprice">
-                        <label for="missedlocation">Cost per missed location</label>
-                        <input type="text" class="form-control w-50" id="missedlocation" name="missedlocation">
-                        <div class="row justify-content-center">
-                            <button type="submit" class="btn btn-primary my-3 w-50">Set parameters</button>
-                        </div>
-                    </form>
-                </div>
-                <hr class="solid">
-                {% endif %}
             </div>
             <div class="col-9">
                 {% block content %}
