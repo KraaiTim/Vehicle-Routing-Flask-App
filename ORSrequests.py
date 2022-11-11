@@ -7,7 +7,7 @@ import requests
 # TODO add counter to check for max 40 calls per minute
 
 
-def directions(api_key: str, coordinates: list):
+def directions(api_key: str, coordinates: list, mot: str):
     """
     Posts a request to the Directions endpoint of the OpenRouteService API. 
     Returns a list of coordinates of the recommended route for a car betweeen the locations.
@@ -25,7 +25,7 @@ def directions(api_key: str, coordinates: list):
         'Content-Type': 'application/json; charset=utf-8'
     }
     call = requests.post(
-        'https://api.openrouteservice.org/v2/directions/driving-car/geojson', json=body, headers=headers)
+        f'https://api.openrouteservice.org/v2/directions/{mot}/geojson', json=body, headers=headers)
 
     # If there is a point for which no routable point can be found within 350 meters, error 2010, return empty list
     if "error" in json.loads(call.text):
@@ -36,7 +36,7 @@ def directions(api_key: str, coordinates: list):
         return json.loads(call.text)['features'][0]['geometry']['coordinates']
 
 
-def matrix(api_key: str, locations: list, sources: list, destinations: list):
+def matrix(api_key: str, locations: list, sources: list, destinations: list, mot: str):
     """
     Posts a request to the Matrix endpoint of the OpenRouteService API. 
     Returns a dict with a distance matrix (in meters) and a duration matrix (in seconds) a car route between the sources and destinations.
@@ -56,5 +56,5 @@ def matrix(api_key: str, locations: list, sources: list, destinations: list):
         'Content-Type': 'application/json; charset=utf-8'
     }
     call = requests.post(
-        'https://api.openrouteservice.org/v2/matrix/driving-car', json=body, headers=headers)
+        f'https://api.openrouteservice.org/v2/matrix/{mot}', json=body, headers=headers)
     return json.loads(call.text)

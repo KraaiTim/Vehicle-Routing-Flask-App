@@ -11,7 +11,7 @@ from ORSrequests import directions, matrix
 N = 50
 
 
-def route(locations: list, api_key: str):
+def route(locations: list, api_key: str, mot: str):
     coordinates = []
 
     if locations == []:
@@ -25,7 +25,8 @@ def route(locations: list, api_key: str):
                 api_result = directions(api_key, locations[begin:end])
                 # If the route back to the depot is left
                 if end-begin == 1:
-                    api_result = directions(api_key, locations[(begin-1):end])
+                    api_result = directions(
+                        api_key, locations[(begin-1):end], mot)
 
                 # If api_result is not empty, append it otherwise add an empty list.
                 if api_result:
@@ -33,7 +34,7 @@ def route(locations: list, api_key: str):
                 else:
                     coordinates = coordinates + []
         else:
-            api_result = directions(api_key, locations)
+            api_result = directions(api_key, locations, mot)
             if api_result == []:
                 return []
             else:
@@ -44,7 +45,7 @@ def route(locations: list, api_key: str):
 # TODO set max of 300 locations due to routing and matrix calls per minute
 
 
-def distancematrix(locations: list, api_key: str):
+def distancematrix(locations: list, api_key: str, mot: str):
     # List with indexes of locations
     locations_indexes = list(range(len(locations)))
 
@@ -84,7 +85,7 @@ def distancematrix(locations: list, api_key: str):
                     dest = locations_indexes[col_start:col_end]
 
                 # Call ORS Matrix API function with specific sources and destinations
-                api_result = matrix(api_key, locations, source, dest)
+                api_result = matrix(api_key, locations, source, dest, mot)
                 # Select the distances of the API results, convert to np.array, round and change to int and convert back to list
                 api_result = np.round(np.array(api_result["distances"]).astype(
                     np.double), 0).astype(int).tolist()
@@ -95,7 +96,8 @@ def distancematrix(locations: list, api_key: str):
     else:
         # Call ORS Matrix API function with all locations as sources and destinations
         api_result = matrix(
-            api_key, locations, locations_indexes, locations_indexes)
+            api_key, locations, locations_indexes, locations_indexes, mot)
+        print("api_result", api_result)
         # Select the distances of the API results, convert to np.array, round and change to int and convert back to list
         distance_matrix = np.round(np.array(api_result["distances"]).astype(
             np.double), 0).astype(int).tolist()

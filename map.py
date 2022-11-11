@@ -1,4 +1,4 @@
-from folium import (FeatureGroup, Icon, LayerControl, Map, Marker, Polygon,
+from folium import (FeatureGroup, Icon, LayerControl, Map, Marker,
                     PolyLine, Popup, TileLayer)
 
 # Import route function
@@ -18,21 +18,24 @@ def empty_map():
     return m
 
 
-def locations_map(depot, points):
+def locations_map(points, depot=None):
+    # Initialize empty map
     midpoint = [51.688193, 5.547352]
     m = Map(location=midpoint, tiles=None, zoom_start=7,
             control_scale=True, zoom_control=False)
     TileLayer(tiles='OpenStreetMap', control=True).add_to(m)
-
-    fg_depots = FeatureGroup(name="Depot")
-    Marker(location=depot, popup=Popup("{}".format(
-        ["{:.5}".format(float(coord)) for coord in depot])), icon=Icon(
-        color="green", icon='home', prefix='fa')).add_to(fg_depots)
-    fg_depots.add_to(m)
+    # If depot exists, add marker and FeatureGroup
+    if depot:
+        fg_depots = FeatureGroup(name="Depot")
+        Marker(location=depot, popup=Popup("{}".format(
+            ["{:.5}".format(float(coord)) for coord in depot])), icon=Icon(
+            color="green", icon='home', prefix='fa')).add_to(fg_depots)
+        fg_depots.add_to(m)
 
     fg_locations = FeatureGroup(name="Locations")
+
     # Place markers on the Folium map with different icon for first point = depot
-    for idx, p in enumerate(points):
+    for p in points:
         Marker(location=p, popup=Popup("{}".format(
             ["{:.5}".format(float(coord)) for coord in p])), color="blue").add_to(fg_locations)
     fg_locations.add_to(m)
@@ -42,42 +45,35 @@ def locations_map(depot, points):
 
 
 # Function to draw the map, TSP, get route coordinates and draw the route.
-def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
+def plotmap(points, depot, api_key, num_vehicles, mot):
+    # TODO substitute below with above functions without LayerControl being in the above functions
 
-    # Set midpoint as depot
-    points = [depot] + points
-
-    # Create map
-    # for titles also optional use "OpenStreetMap", "cartodbpositron"
+    # Create map with locations and depot
     midpoint = [51.688193, 5.547352]
-    m = Map(location=midpoint, tiles=None, zoom_start=7, control_scale=True)
+    m = Map(location=midpoint, tiles=None, zoom_start=7,
+            control_scale=True, zoom_control=False)
+    TileLayer(tiles='OpenStreetMap', control=True).add_to(m)
+    # If depot exists, add marker and FeatureGroup
+    if depot:
+        fg_depots = FeatureGroup(name="Depot")
+        Marker(location=depot, popup=Popup("{}".format(
+            ["{:.5}".format(float(coord)) for coord in depot])), icon=Icon(
+            color="green", icon='home', prefix='fa')).add_to(fg_depots)
+        fg_depots.add_to(m)
 
-    tile_layer = TileLayer(tiles='OpenStreetMap', control=False).add_to(m)
-
-    # If polybounds given, draw polygons
-    if polybounds:
-        #        for idx, coords in enumerate(polybounds):
-        #            Marker(location=list(coords),popup=Popup("ID: {}".format(idx))).add_to(m)
-
-        Polygon(polybounds, color="blue", weight=2,
-                fill_color="blue", fill_opacity=0.3).add_to(m)
-
-    fg_markers = FeatureGroup(name="Locations")
+    fg_locations = FeatureGroup(name="Locations")
 
     # Place markers on the Folium map with different icon for first point = depot
-    for idx, p in enumerate(points):
-        if idx == 0:
-            Marker(location=p, popup=Popup("ID: {}".format(idx)), icon=Icon(
-                color="green", icon='home', prefix='fa')).add_to(fg_markers)
-        else:
-            Marker(location=p, popup=Popup(
-                "ID: {}".format(idx)), color="blue").add_to(fg_markers)
-
-    fg_markers.add_to(m)
+    for p in points:
+        Marker(location=p, popup=Popup("{}".format(
+            ["{:.5}".format(float(coord)) for coord in p])), color="blue").add_to(fg_locations)
+    fg_locations.add_to(m)
 
     # Call TSP model
-    routes = TSPmodel(locations=points, api_key=api_key,
-                      num_vehicles=num_vehicles)
+    tsp_locations = [list(reversed(depot))] + \
+        [list(reversed(p)) for p in points]
+    routes = TSPmodel(locations=tsp_locations, api_key=api_key,
+                      num_vehicles=num_vehicles, mot=mot)
 
     colors = [
         'red',
@@ -97,6 +93,8 @@ def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
         'black'
     ]
 
+    coordinates = [depot] + points
+
     # For each route
     for route_id, route_locs in enumerate(routes):
 
@@ -105,9 +103,12 @@ def plotmap(depot, points, api_key, num_vehicles=1, polybounds=[]):
         # Create list of the coordinates of the locations on the route
         route_coords = []
         for i in route_locs["route"]:
-            route_coords.append(points[i])
+            route_coords.append(coordinates[i])
 
-        coords_route = route(route_coords, api_key)
+        # Call ORS directions api for route details
+        coords_route = route([list(reversed(p))
+                             for p in route_coords], api_key, mot)
+        coords_route = [list(reversed(p)) for p in coords_route]
 
         for i in range(len(route_coords)-1):
             PolyLine(locations=[coords_route],

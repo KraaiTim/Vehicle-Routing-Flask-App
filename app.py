@@ -37,7 +37,6 @@ def home():
         num_vehicles = 1
 
         inputs = session["inputs"]
-        print(request.form)
         if "locations" in request.form:
             if request.form.get("locationsRadio") == "random":
                 num_locations = int(request.form.get("randomRange"))
@@ -57,22 +56,23 @@ def home():
                 inputs["method"] = "file"
                 inputs["locations"] = len(df.index)
                 inputs["location_coords"] = coordinates
-            # If depot not defined, set standard value
-            if "depot" not in inputs:
-                inputs["depot"] = [51.688193, 5.547352]
             # Store updated inputs in session
             session["inputs"] = inputs
-            # plot maps
-            map = locations_map(inputs["depot"], inputs["location_coords"])
+            # plot map
+            map = locations_map(inputs["location_coords"])
             return render_template('index.html', map=map._repr_html_(), inputs=inputs)
         elif "depot" in request.form:
-            # TODO change for multiple depots
             inputs = session["inputs"]
-            inputs["depot"] = [float(request.form.get("depot_lat")), float(
-                request.form.get("depot_long"))]
+            if not "returnCheck" in request.form:
+                # Depot start location <> return location
+                pass
+            # Map expects coords in [Longtitude, Latitude]
+            # TODO change for multiple depots
+            inputs["depot"] = [float(
+                request.form.get("start_long_1")), float(request.form.get("start_lat_1"))]
             session["inputs"] = inputs
-            # plot maps
-            map = locations_map(inputs["depot"], inputs["location_coords"])
+            # plot map
+            map = locations_map(inputs["location_coords"], inputs["depot"])
             return render_template('index.html', map=map._repr_html_(),  inputs=inputs)
     else:
         # If api keys are not set, redirect to keys
@@ -104,14 +104,29 @@ def google():
     return render_template('google.html', inputs=inputs)
 
 
-@app.route('/calculateroute', methods=["GET"])
+@app.route('/calculateroute', methods=["POST"])
 def calculateroute():
     inputs = session["inputs"]
-    # 1. Use all inputs to calculate the route
-    # 2. While calculating, show progress bar with
-    # 3. When route determined, redirect to index
-    # 4. On index show map
-    # 5. Below map show the totals and the locations per vehicle
+    if request.method == "POST":
+        if request.form.get("MOT") == "car":
+            mot = "driving-car"
+            map, routes = plotmap(points=inputs["location_coords"],
+                                  depot=inputs["depot"], api_key=ORS_api_key, num_vehicles=1, mot=mot)
+        else:
+            # Bike
+            mot = "cycling-regular"
+            map, routes = plotmap(points=inputs["location_coords"],
+                                  depot=inputs["depot"], api_key=ORS_api_key, num_vehicles=1, mot=mot)
+
+        return render_template('index.html', map=map._repr_html_(), inputs=inputs)
+        # 1. Use all inputs to calculate the route
+        # 2. While calculating, show progress bar with
+        # 3. When route determined, redirect to index
+        # 4. On index show map
+        # 5. Below map show the totals and the locations per vehicle
+    else:
+        map = locations_map(inputs["location_coords"], inputs["depot"])
+        return render_template('index.html', map=map._repr_html_(), inputs=inputs)
 
 
 @app.route('/keys', methods=["GET", "POST"])

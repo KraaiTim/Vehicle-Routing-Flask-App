@@ -8,14 +8,14 @@ from distance_matrix import distancematrix
 # Using Google OR-Tools https://developers.google.com/optimization/routing/tsp
 
 
-def TSPmodel(locations, api_key, num_vehicles=1):
+def TSPmodel(locations, api_key, num_vehicles, mot):
 
     def create_data_model(locs: list):
         """Stores the distance matrix, depot and number of vehicles."""
         data = {}
         # Call distance matrix function on locations
         # TODO multiply Distance Matrix by constant for cost per kilometer
-        data['distance_matrix'] = distancematrix(locs, api_key)
+        data['distance_matrix'] = distancematrix(locs, api_key, mot)
         data['num_vehicles'] = num_vehicles
         # TODO implement the different start points of vehicles, remove depot
         #data['starts'] = [1, 2, 15, 16]

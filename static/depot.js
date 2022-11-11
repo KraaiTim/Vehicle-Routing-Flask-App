@@ -1,116 +1,121 @@
-    function showReturn() {
-        chboxs = document.getElementsByName("returnCheck");
-        returns = document.getElementsByName("return");
-        for (let i = 0; i < chboxs.length; i++) {
-            // If the checkbox is checked, display the output text
-            if (chboxs[i].checked) {
-                returns[i].style.display = "none";
-            } else {
-                returns[i].style.display = "block";
-            }
+function showReturn() {
+    chboxs = document.getElementsByName("returnCheck");
+    returns = document.getElementsByName("return");
+    for (let i = 0; i < chboxs.length; i++) {
+        // If the checkbox is checked, display the output text
+        if (chboxs[i].checked) {
+            returns[i].style.display = "none";
+        } else {
+            returns[i].style.display = "block";
         }
-    };
-
-    //On change eventlistener to call Autocomplete API
-    address_inputs = document.getElementsByName("depot");
-    address_inputs.forEach((element) => {
-        element.addEventListener(
-            'input',
-            //Callback function
-            (event) => {
-                if (element.value.length >= 5) {
-                    (async () => {
-                        autocomplete_body = await geocode_api(element.value, api_key, "autocomplete");
-                        console.log(autocomplete_body["features"]);
-                        autocomplete(element, autocomplete_body["features"]);
-                    })(element, api_key)
-                }
-            }
-        )
-    });
-
-    //On Enter eventlistener to call Search API
-    address_inputs.forEach((element) => {
-        element.addEventListener(
-            'keypress',
-            //Callback function
-            (event) => {
-                // If the user presses the "Enter" key on the keyboard
-                if (event.key === "Enter") {
-                    // Cancel the default action, if needed
-                    event.preventDefault();
-                    // Call Search API
-                    (async () => {
-                        search_body = await geocode_api(element.value, api_key, "search");
-
-                    })(element, api_key)
-                }
-            })
-    });
-
-    //TODO Implement Throttle
-    const geocode_api = async (address, api_key, endpoint) => {
-        let encoded_address = encodeURIComponent(address);
-        let url = ""
-        if (endpoint === "autocomplete") {
-            url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${api_key}&text=${encoded_address}`
-        }
-        else {
-            url = `https://api.openrouteservice.org/geocode/search?api_key=${api_key}&text=${encoded_address}`
-        }
-        // GET Request
-        const response = await fetch(url);
-        console.log(response.headers.get('x-ratelimit-limit'));
-        console.log(response.headers.get('x-ratelimit-remaining'));
-        
-        const unixTimestamp = response.headers.get('x-ratelimit-reset')
-        const milliseconds = unixTimestamp * 1000 
-        const dateObject = new Date(milliseconds)
-        console.log(dateObject)
-        
-        const data = await response.json();
-
-        return data;
     }
+};
 
-    function addDepot() {
-        depot = document.createElement("div");
-        depot.setAttribute("class", "row");
-        num_depot = (document.getElementsByName("depot").length / 2 + 1);
-        depot.innerHTML =
-            `<h5>Depot ${num_depot}</h5><button class="btn btn-danger"
-            id="removeDepot" type="button" onclick="deleteDepot(this)">
-            <i class="bi bi-trash"></i>
-            Del
-            </button>
-            <div class="col-6 autocomplete">
-            <label for="depot" class="form-label mb-0">Start address</label>
+//On change eventlistener to call Autocomplete API
+var address_inputs = document.getElementsByName("depot");
+
+address_inputs.forEach((element) => {
+    element.addEventListener(
+        'input',
+        //Callback function
+        (event) => {
+            if (element.value.length >= 5) {
+                (async () => {
+                    autocomplete_body = await geocode_api(element.value, api_key, "autocomplete");
+                    console.log(autocomplete_body["features"]);
+                    autocomplete(element, autocomplete_body["features"]);
+                })(element, api_key)
+            }
+        }
+    )
+});
+
+//On Enter eventlistener to call Search API
+address_inputs.forEach((element) => {
+    element.addEventListener(
+        'keypress',
+        //Callback function
+        (event) => {
+            // If the user presses the "Enter" key on the keyboard
+            if (event.key === "Enter") {
+                // Cancel the default action, if needed
+                event.preventDefault();
+                // Call Search API
+                (async () => {
+                    search_body = await geocode_api(element.value, api_key, "search");
+
+                })(element, api_key)
+            }
+        })
+});
+
+//TODO Implement Throttle
+const geocode_api = async (address, api_key, endpoint) => {
+    let encoded_address = encodeURIComponent(address);
+    let url = ""
+    if (endpoint === "autocomplete") {
+        url = `https://api.openrouteservice.org/geocode/autocomplete?api_key=${api_key}&text=${encoded_address}`
+    }
+    else {
+        url = `https://api.openrouteservice.org/geocode/search?api_key=${api_key}&text=${encoded_address}`
+    }
+    // GET Request
+    const response = await fetch(url);
+    console.log(response.headers.get('x-ratelimit-limit'));
+    console.log(response.headers.get('x-ratelimit-remaining'));
+    
+    const unixTimestamp = response.headers.get('x-ratelimit-reset')
+    const milliseconds = unixTimestamp * 1000 
+    const dateObject = new Date(milliseconds)
+    console.log(dateObject)
+    
+    const data = await response.json();
+
+    return data;
+}
+
+function addDepot() {
+    depot = document.createElement("div");
+    depot.setAttribute("class", "row");
+    num_depot = (document.getElementsByName("depot").length / 2 + 1);
+    depot.innerHTML =
+        `<h5>Depot ${num_depot}</h5><button class="btn btn-danger"
+        id="removeDepot" type="button" onclick="deleteDepot(this)">
+        <i class="bi bi-trash"></i>
+        Del
+        </button>
+        <div class="col-6 autocomplete">
+        <label for="depot" class="form-label mb-0">Start address</label>
+        <input type="text" class="form-control" id="depot" name="depot"
+            placeholder="Type address, autocomplete after 5 characters, search on Enter">
+        <input id="start_lat_${num_depot}" name="start_lat_${num_depot}">
+        <input id="start_long_${num_depot}" name="start_long_${num_depot}">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" name="returnCheck"
+                checked="checked" onclick="showReturn()">
+            <label class="form-check-label" for="flexCheckChecked">
+                Return to Start
+            </label>
+        </div>
+        </div>
+        <div class="col-6 autocomplete" name="return" style="display:none">
+            <label for="depot" class="form-label mb-0">Return address</label>
             <input type="text" class="form-control" id="depot" name="depot"
                 placeholder="Type address, autocomplete after 5 characters, search on Enter">
-            <input id="start_lat_${num_depot}" name="start_lat_${num_depot}">
-            <input id="start_long_${num_depot}" name="start_long_${num_depot}">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" name="returnCheck"
-                    checked="checked" onclick="showReturn()">
-                <label class="form-check-label" for="flexCheckChecked">
-                    Return to Start
-                </label>
-            </div>
-            </div>
-            <div class="col-6 autocomplete" name="return" style="display:none">
-                <label for="depot" class="form-label mb-0">Return address</label>
-                <input type="text" class="form-control" id="depot" name="depot"
-                    placeholder="Type address, autocomplete after 5 characters, search on Enter">
-                <input id="return_lat_${num_depot}" name="return_lat_${num_depot}">
-                <input id="return_long_${num_depot}" name="return_long_${num_depot}">
-            </div>`;
+            <input id="return_lat_${num_depot}" name="return_lat_${num_depot}">
+            <input id="return_long_${num_depot}" name="return_long_${num_depot}">
+        </div>`;
 
-        document.getElementById('newdepot').appendChild(depot);
-    };
+    document.getElementById('newdepot').appendChild(depot);
+    /* Update depot inputs */
+    address_inputs = document.getElementsByName("depot");
+};
 
 function deleteDepot(element) {
     element.closest(".row").remove();
-    }
+    /* Update depot inputs */
+    address_inputs = document.getElementsByName("depot");
+}
 
 
 /* Autocomplete 3WSchools https://www.w3schools.com/howto/howto_js_autocomplete.asp */
@@ -129,7 +134,7 @@ function autocomplete(inp, arr) {
     a.setAttribute("id", inp.id + "autocomplete-list");
     a.setAttribute("class", "autocomplete-items");
     /*append the DIV element as a child of the autocomplete container:*/
-    inp.after(a);
+    inp.parentNode.appendChild(a);
     /*for each item in the array...*/
     for (i = 0; i < arr.length; i++) {
         /*check if the item starts with the same letters as the text field value:*/
@@ -147,9 +152,12 @@ function autocomplete(inp, arr) {
         b.addEventListener("click", function(e) {
             /*insert the value for the autocomplete text field:*/
             inp.value = this.getElementsByTagName("input")[0].value;
+            console.log("inp", inp)
             lat = inp.nextElementSibling
+            console.log("lat", lat);
             lat.value = this.getElementsByTagName("input")[1].value;
             long = lat.nextElementSibling
+            console.log("long", long);
             long.value = this.getElementsByTagName("input")[2].value;
             /*close the list of autocompleted values,
             (or any other open lists of autocompleted values:*/
