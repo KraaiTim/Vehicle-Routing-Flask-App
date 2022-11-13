@@ -8,14 +8,14 @@ from distance_matrix import distancematrix
 # Using Google OR-Tools https://developers.google.com/optimization/routing/tsp
 
 
-def TSPmodel(locations, api_key, num_vehicles, mot):
+def TSPmodel(locations, api_key, num_vehicles, mot, price_km=None, penalty=None):
 
     def create_data_model(locs: list):
         """Stores the distance matrix, depot and number of vehicles."""
         data = {}
         # Call distance matrix function on locations
         # TODO multiply Distance Matrix by constant for cost per kilometer
-        data['distance_matrix'] = distancematrix(locs, api_key, mot)
+        data['distance_matrix'] = distancematrix(locs, api_key, mot, price_km)
         data['num_vehicles'] = num_vehicles
         # TODO implement the different start points of vehicles, remove depot
         #data['starts'] = [1, 2, 15, 16]
@@ -57,11 +57,12 @@ def TSPmodel(locations, api_key, num_vehicles, mot):
         2000000,  # vehicle maximum travel distance in meters
         True,  # start cumul to zero
         dimension_name)
+    # If penalty is defined, allow to drop nodes.
     # TODO add penalty cost for missing a location. Can be different based on the country (add in front end).
-    # Allow to drop nodes.
-    # penalty = 1000
-    # for node in range(1, len(data['distance_matrix'])):
-    #    routing.AddDisjunction([manager.NodeToIndex(node)], penalty)
+    if penalty:
+        for node in range(1, len(data['distance_matrix'])):
+            routing.AddDisjunction(
+                [manager.NodeToIndex(node)], penalty)
 
     distance_dimension = routing.GetDimensionOrDie(dimension_name)
     distance_dimension.SetGlobalSpanCostCoefficient(100)

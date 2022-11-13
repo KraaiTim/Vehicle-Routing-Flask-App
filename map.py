@@ -34,7 +34,8 @@ def locations_map(points, depot=None):
 
     fg_locations = FeatureGroup(name="Locations")
 
-    # Place markers on the Folium map with different icon for first point = depot
+    # Place markers on the Folium map
+    # TODO change popup to address if available
     for p in points:
         Marker(location=p, popup=Popup("{}".format(
             ["{:.5}".format(float(coord)) for coord in p])), color="blue").add_to(fg_locations)
@@ -45,7 +46,7 @@ def locations_map(points, depot=None):
 
 
 # Function to draw the map, TSP, get route coordinates and draw the route.
-def plotmap(points, depot, api_key, num_vehicles, mot):
+def plotmap(points, depot, api_key, num_vehicles, mot, price_km=None, penalty=None):
     # TODO substitute below with above functions without LayerControl being in the above functions
 
     # Create map with locations and depot
@@ -73,7 +74,7 @@ def plotmap(points, depot, api_key, num_vehicles, mot):
     tsp_locations = [list(reversed(depot))] + \
         [list(reversed(p)) for p in points]
     routes = TSPmodel(locations=tsp_locations, api_key=api_key,
-                      num_vehicles=num_vehicles, mot=mot)
+                      num_vehicles=num_vehicles, mot=mot, price_km=price_km, penalty=penalty)
 
     colors = [
         'red',

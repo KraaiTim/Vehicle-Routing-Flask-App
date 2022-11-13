@@ -5,6 +5,7 @@ from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session, url_for)
 
 from flask_session import Session
+from routes import df_routes
 from geocoding import read_addresses
 from map import empty_map, locations_map, plotmap
 from random_locations import random_coords
@@ -37,31 +38,8 @@ def home():
         num_vehicles = 1
 
         inputs = session["inputs"]
-        if "locations" in request.form:
-            if request.form.get("locationsRadio") == "random":
-                num_locations = int(request.form.get("randomRange"))
-                coordinates = random_coords(num_locations)
-                # Update inputs
-                inputs = session["inputs"]
-                inputs["method"] = "random"
-                inputs["locations"] = num_locations
-                inputs["location_coords"] = coordinates
-            elif request.form.get("locationsRadio") == "file":
-                file = request.files["formFile"]
-                df = read_addresses(file)
-                coordinates = [[df.loc[i, "Lat"], df.loc[i, "Lon"]]
-                               for i in range(len(df))]
-                # Update inputs
-                inputs = session["inputs"]
-                inputs["method"] = "file"
-                inputs["locations"] = len(df.index)
-                inputs["location_coords"] = coordinates
-            # Store updated inputs in session
-            session["inputs"] = inputs
-            # plot map
-            map = locations_map(inputs["location_coords"])
-            return render_template('index.html', map=map._repr_html_(), inputs=inputs)
-        elif "depot" in request.form:
+        if "depot" in request.form:
+            print(request.form)
             inputs = session["inputs"]
             if not "returnCheck" in request.form:
                 # Depot start location <> return location
@@ -70,6 +48,7 @@ def home():
             # TODO change for multiple depots
             inputs["depot"] = [float(
                 request.form.get("start_long_1")), float(request.form.get("start_lat_1"))]
+            inputs["depot_address"] = request.form.get("depot")
             session["inputs"] = inputs
             # plot map
             map = locations_map(inputs["location_coords"], inputs["depot"])
@@ -79,22 +58,52 @@ def home():
         if ORS_api_key is None:
             return redirect("/keys")
         else:
-            inputs = {}
-            session["inputs"] = inputs
-            map = empty_map()
+            if "inputs" in session:
+                inputs = session["inputs"]
+                if "location_coords" in inputs:
+                    map = locations_map(inputs["location_coords"])
+                else:
+                    map = empty_map()
+            else:
+                inputs = {}
+                map = empty_map()
             return render_template('index.html', map=map._repr_html_(), inputs=inputs)
 
 
-@app.route('/locations', methods=["GET"])
+@app.route('/locations', methods=["GET", "POST"])
 def locations():
-    inputs = session["inputs"]
+    if "inputs" in session:
+        inputs = session["inputs"]
+    else:
+        inputs = {}
+    if request.method == "POST":
+        if request.form.get("locationsRadio") == "random":
+            num_locations = int(request.form.get("randomRange"))
+            coordinates = random_coords(num_locations)
+            # Update inputs
+            inputs["method"] = "random"
+            inputs["locations"] = num_locations
+            inputs["location_coords"] = coordinates
+        elif request.form.get("locationsRadio") == "file":
+            # TODO Async coordinates determination. Directly load addresses and later the coordinates
+            file = request.files["formFile"]
+            df = read_addresses(file)
+            coordinates = [[df.loc[i, "Lat"], df.loc[i, "Lon"]]
+                           for i in range(len(df))]
+            # Update inputs
+            inputs["method"] = "file"
+            inputs["locations"] = len(df.index)
+            inputs["location_coords"] = coordinates
+            inputs["location_addresses"] = df
+        # Store updated inputs in session
+        session["inputs"] = inputs
     return render_template('locations.html', inputs=inputs)
 
 
 @app.route('/depots', methods=["GET"])
 def depots():
     inputs = session["inputs"]
-    #ORS_api_key = session["openrouteservice_api_key"]
+    # ORS_api_key = session["openrouteservice_api_key"]
     return render_template('depots.html', ORS_api_key=ORS_api_key, inputs=inputs)
 
 
@@ -108,16 +117,37 @@ def google():
 def calculateroute():
     inputs = session["inputs"]
     if request.method == "POST":
+        if request.form.get("kmprice"):
+            km_price = float(request.form.get("kmprice")) * 100
+            km_price = int(km_price)
+        else:
+            km_price = None
+        if request.form.get("missedlocation"):
+            penalty = float(request.form.get("missedlocation")) * 100
+            penalty = int(penalty)
+        else:
+            penalty = None
+
         if request.form.get("MOT") == "car":
             mot = "driving-car"
             map, routes = plotmap(points=inputs["location_coords"],
-                                  depot=inputs["depot"], api_key=ORS_api_key, num_vehicles=1, mot=mot)
+                                  depot=inputs["depot"], api_key=ORS_api_key, num_vehicles=1, mot=mot, price_km=km_price, penalty=penalty)
+            # DF with columns: Vehicle, Location id, Street, Number, Postcode, City, Distance
+            routes_df = df_routes(inputs, routes)
+            inputs["routes"] = routes_df
+            inputs["routes_total"] = routes
+            session["inputs"] = inputs
         else:
             # Bike
             mot = "cycling-regular"
             map, routes = plotmap(points=inputs["location_coords"],
                                   depot=inputs["depot"], api_key=ORS_api_key, num_vehicles=1, mot=mot)
-
+            # DF with columns: Vehicle, Location id, Street, Number, Postcode, City, Distance
+            routes_df = df_routes(inputs, routes)
+            inputs["routes"] = routes_df
+            inputs["routes_total"] = routes
+            session["inputs"] = inputs
+        # TODO change to redirect
         return render_template('index.html', map=map._repr_html_(), inputs=inputs)
         # 1. Use all inputs to calculate the route
         # 2. While calculating, show progress bar with

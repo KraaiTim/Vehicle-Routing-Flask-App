@@ -5,6 +5,7 @@
 * { box-sizing: border-box; }
 body {
   font: 16px Arial;
+  margin-bottom: 20px;
 }
 .autocomplete {
   /*the container must be positioned relative:*/
@@ -48,4 +49,14 @@ input[type=submit] {
   /*when navigating through the items using the arrow keys:*/
   background-color: DodgerBlue !important;
   color: #ffffff;
+}
+
+footer {
+  position: fixed;
+  height: 20px;
+  background-color: #d2d2d2;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  margin-bottom: 0px;
 }

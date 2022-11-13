@@ -28,9 +28,9 @@ def directions(api_key: str, coordinates: list, mot: str):
         f'https://api.openrouteservice.org/v2/directions/{mot}/geojson', json=body, headers=headers)
 
     # If there is a point for which no routable point can be found within 350 meters, error 2010, return empty list
+    # TODO handle errors
     if "error" in json.loads(call.text):
         if json.loads(call.text)['error']['code'] == 200:
-            print(json.loads(call.text))
             return []
     else:
         return json.loads(call.text)['features'][0]['geometry']['coordinates']

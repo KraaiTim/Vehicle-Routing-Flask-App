@@ -10,11 +10,12 @@ def read_addresses(file) -> pd.DataFrame:
     elif file_extension == "xls" or file_extension == "xlsx":
         df = pd.read_excel(file, header=0)
     else:
+        # TODO change to flash message
         print("Incorrect file type")
 
     # Change column names
-    df['ADDRESS'] = df['Straat'] + ", " + df['Nummer'].astype(str) + ", " + \
-        df['Postcode'] + ", " + df['Stad'] + ", " + df['Land']
+    df['ADDRESS'] = df[['Street', 'Number', 'Postcode', 'City',
+                        'State', 'Country']].stack().astype(str).groupby(level=0).agg(', '.join)
 
     geolocator = Nominatim(user_agent="application")
 

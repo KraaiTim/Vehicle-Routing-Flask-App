@@ -45,7 +45,7 @@ def route(locations: list, api_key: str, mot: str):
 # TODO set max of 300 locations due to routing and matrix calls per minute
 
 
-def distancematrix(locations: list, api_key: str, mot: str):
+def distancematrix(locations: list, api_key: str, mot: str, price_km: float):
     # List with indexes of locations
     locations_indexes = list(range(len(locations)))
 
@@ -88,18 +88,24 @@ def distancematrix(locations: list, api_key: str, mot: str):
                 api_result = matrix(api_key, locations, source, dest, mot)
                 # Select the distances of the API results, convert to np.array, round and change to int and convert back to list
                 api_result = np.round(np.array(api_result["distances"]).astype(
-                    np.double), 0).astype(int).tolist()
+                    np.double), 0)
+                # TODO check if removing of .tolist() results in problems
 
                 # Append results of current matrix to the row
                 rows = np.append(rows, api_result, axis=1)
             distance_matrix = np.append(distance_matrix, rows, axis=0)
+            if price_km:
+                distance_matrix = distance_matrix * price_km
+            distance_matrix = distance_matrix.astype(int).tolist()
     else:
         # Call ORS Matrix API function with all locations as sources and destinations
         api_result = matrix(
             api_key, locations, locations_indexes, locations_indexes, mot)
-        print("api_result", api_result)
         # Select the distances of the API results, convert to np.array, round and change to int and convert back to list
         distance_matrix = np.round(np.array(api_result["distances"]).astype(
-            np.double), 0).astype(int).tolist()
+            np.double), 0)
+        if price_km:
+            distance_matrix = distance_matrix * price_km
+        distance_matrix = distance_matrix.astype(int).tolist()
 
     return distance_matrix

@@ -12,59 +12,35 @@ Vehicle routing
 
 {% block results %}
 <!-- Route results -->
-<div class="row justify-content-center">
-    <!--
-        <table>
+
+{% if inputs["routes"] is defined %}
+<div class="container-fluid">
+    <div class="row justify-content-center text-center">
+        <table class="mt-3">
             <tr>
                 <th>Vehicle</th>
-                <th>Route</th>
-                <th>km's</th>
+                <th>Location id</th>
+                <th>Street</th>
+                <th>Number</th>
+                <th>Postcode</th>
+                <th>City</th>
+                <th>In Total: {{ inputs["routes_total"][0]["cost"] / 1000 }} kms</th>
             </tr>
-            {% for route in routes %}
+            {% for key, location in inputs["routes"].iterrows() %}
             <tr>
-                <td>{{ route["id"] + 1}}</td>
-                <td>{{ route["route"] }}</td>
-                <td>{{ '%0.2f' % (route["cost"] / 1000)|float }} kms</td>
+                <td>{{ location["vehicle"] }}</td>
+                <td>{{ location["location_id"] }}</td>
+                <td>{{ location["street"] }}</td>
+                <td>{{ location["number"] }}</td>
+                <td>{{ location["postcode"] }}</td>
+                <td>{{ location["city"] }}</td>
+                <td>{{ location["distance"] }} kms</td>
             </tr>
             {% endfor %}
-        </table>
-
-        <div id="accordion">
-            {% for route in routes %}
-            <div class="card">
-                <div class="card-header" id="headingOne">
-                    <h5 class="mb-0">
-                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne"
-                            aria-expanded="false" aria-controls="collapseOne">
-                            <span class="text-start">Vehicle {{ route["id"] + 1}}</span>
-                            <span class="text-end">{{ '%0.2f' % (route["cost"] / 1000)|float }} kms</span>
-                        </button>
-                    </h5>
-                </div>
-
-                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
-                    <div class="card-body">
-                        <table>
-                            <tr>
-                                <th>Location</th>
-                                <th>Address</th>
-                                <th>km's</th>
-                            </tr>
-                            {% for loc in route["route"] %}
-                            <tr>
-                                <td>{{ loc }}</td>
-                                <td>??</td>
-                                <td>{{ route["route_cost"]["{{loop.index}}"] }} kms</td>
-                            </tr>
-                            {% endfor %}
-                        </table>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        -->
+            </tabel>
+    </div>
 </div>
+{% endif %}
 {% endblock %}
 
 

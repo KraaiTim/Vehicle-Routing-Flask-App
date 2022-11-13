@@ -21,7 +21,7 @@ Vehicle routing
 
 <div class="container-fluid">
 
-    <form id="formdata" action="/" method="POST" enctype="multipart/form-data">
+    <form id="formdata" action="/locations" method="POST" enctype="multipart/form-data">
 
         <div class="px-4" id="radios">
             <div class="form-check form-check-inline">
@@ -65,11 +65,19 @@ Vehicle routing
                 <div class="col">
                     <div class="container-fluid">
                         <div class="row justify-content-center">
+                            <p class="py-2 mb-0">Upload a .csv, .xlsx or .xls file with maximum 100 locations. Please
+                                use this
+                                <a class="py-1" href="../static/locations_template.xlsx"
+                                    download="locationstemplate">Template</a>. After uploading, the coordinates will be
+                                determined for each location, this
+                                takes about
+                                1 second per location.
+                            </p>
+
                             <input class="form-control mb-2" type="file" id="formFile" name="formFile"
                                 accept=".xlsx,.xls,.csv">
-                            <button type="submit" class="btn btn-primary my-3 w-25" name="locations">Upload and
-                                determine Lat &
-                                Long</button>
+                            <button type="submit" class="btn btn-primary my-3 w-25" name="locations">Determine
+                                coordinates</button>
                         </div>
                     </div>
                 </div>
@@ -77,34 +85,74 @@ Vehicle routing
         </div>
     </form>
 </div>
-
-{% if locations is defined %}
 <div class="container-fluid">
     <div class="row justify-content-center">
-        <table>
+        <button class="btn btn-primary my-3 w-25" onClick="location.href='/'" type="button" name="locations">Use
+            selected
+            locations</button>
+
+    </div>
+</div>
+{% if inputs["locations"] is defined %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        {% if inputs["method"] == "random" %}
+        <table class="mt-3">
             <tr>
-                <th>Straat</th>
-                <th>Nummer</th>
+                <!--<th>#</th>
+                <th>Street</th>
+                <th>Number</th>
                 <th>Postcode</th>
-                <th>Stad</th>
-                <th>Land</th>
-                <th>Lat</th>
-                <th>Long</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Country</th> -->
+                <th>Latitude</th>
+                <th>Longitude</th>
             </tr>
-            {% for key, location in locations.iterrows() %}
+            {% for location in inputs["location_coords"] %}
             <tr>
-                <td>{{ location["Straat"] }}</td>
-                <td>{{ location["Nummer"] }}</td>
+                <!--   <td>{{ key }}</td>
+                <td>{{ location["Street"] }}</td>
+                <td>{{ location["Number"] }}</td>
                 <td>{{ location["Postcode"] }}</td>
-                <td>{{ location["Stad"] }}</td>
-                <td>{{ location["Land"] }}</td>
+                <td>{{ location["City"] }}</td>
+                <td>{{ location["State"] }}</td>
+                <td>{{ location["Country"] }}</td> -->
+                <td>{{ '%0.2f' % location[0] |float }}</td>
+                <td>{{ '%0.2f' % location[1] |float }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        {# If a file was uploaded #}
+        <table class="mt-3">
+            <tr>
+                <th>#</th>
+                <th>Street</th>
+                <th>Number</th>
+                <th>Postcode</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Country</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+            </tr>
+            {% for key, location in inputs["location_addresses"].iterrows() %}
+            <tr>
+                <td>{{ key }}</td>
+                <td>{{ location["Street"] }}</td>
+                <td>{{ location["Number"] }}</td>
+                <td>{{ location["Postcode"] }}</td>
+                <td>{{ location["City"] }}</td>
+                <td>{{ location["State"] }}</td>
+                <td>{{ location["Country"] }}</td>
                 <td>{{ '%0.2f' % location["Lat"] |float }}</td>
                 <td>{{ '%0.2f' % location["Lon"] |float }}</td>
             </tr>
             {% endfor %}
         </table>
-        <button class="btn btn-primary my-3 w-25" onClick="location.href='/'" type="button" name="locations">Save
-            Locations</button>
+
+        {% endif %}
     </div>
 </div>
 {% endif %}
