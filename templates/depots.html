@@ -23,25 +23,31 @@ Vehicle routing
         <div class="row">
             <h5>Depot 1</h5>
             <div class="col-6 autocomplete">
-                <label for="depot" class="form-label mb-0">Start address</label>
-                <input type="text" class="form-control" id="depot" name="depot"
+                <label for="depot_autcomplete" class="form-label mb-0">Start address</label>
+                <input type="text" class="form-control" id="depot_autcomplete" name="depot_autcomplete"
                     placeholder="Type address, autocomplete after 5 characters, search on Enter">
-                <input id="start_lat_1" name="start_lat_1" type="hidden">
-                <input id="start_long_1" name="start_long_1" type="hidden">
+                <input id="start_latitude_1" name="start_latitude_1" type="hidden">
+                <input id="start_longitude_1" name="start_longitude_1" type="hidden">
+                <input id="start_street_1" name="start_street_1" type="hidden">
+                <input id="start_number_1" name="start_number_1" type="hidden">
+                <input id="start_postcode_1" name="start_postcode_1" type="hidden">
+                <input id="start_city_1" name="start_city_1" type="hidden">
+                <input id="start_state_1" name="start_state_1" type="hidden">
+                <input id="start_country_1" name="start_country_1" type="hidden">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" name="returnCheck"
-                        checked="checked" onclick="showReturn()">
+                    <input class="form-check-input" type="checkbox" value="" id="return_checkbox_1"
+                        name="return_checkbox_1" checked="checked" onclick="showReturn()">
                     <label class="form-check-label" for="flexCheckChecked">
                         Return to Start
                     </label>
                 </div>
             </div>
             <div class="col-6 autocomplete" name="return" style="display:none">
-                <label for="depot" class="form-label mb-0">Return address</label>
-                <input type="text" class="form-control" id="depot" name="depot"
+                <label for="depot_autcomplete" class="form-label mb-0">Return address</label>
+                <input type="text" class="form-control" id="depot_autcomplete" name="depot_autcomplete"
                     placeholder="Type address, autocomplete after 5 characters, search on Enter">
-                <input id="return_lat_1" name="return_lat_1" type="hidden">
-                <input id="return_long_1" name="return_long_1" type="hidden">
+                <input id="return_latitude_1" name="return_latitude_1" type="hidden">
+                <input id="return_longitude_1" name="return_longitude_1" type="hidden">
             </div>
         </div>
         <!-- Add more depots

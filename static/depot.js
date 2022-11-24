@@ -1,3 +1,4 @@
+/* TODO Change to work with something else than name */
 function showReturn() {
     chboxs = document.getElementsByName("returnCheck");
     returns = document.getElementsByName("return");
@@ -12,7 +13,7 @@ function showReturn() {
 };
 
 //On change eventlistener to call Autocomplete API
-var address_inputs = document.getElementsByName("depot");
+var address_inputs = document.getElementsByName("depot_autcomplete");
 
 address_inputs.forEach((element) => {
     element.addEventListener(
@@ -77,7 +78,7 @@ const geocode_api = async (address, api_key, endpoint) => {
 function addDepot() {
     depot = document.createElement("div");
     depot.setAttribute("class", "row");
-    num_depot = (document.getElementsByName("depot").length / 2 + 1);
+    num_depot = (document.getElementsByName("depot_autcomplete").length / 2 + 1);
     depot.innerHTML =
         `<h5>Depot ${num_depot}</h5><button class="btn btn-danger"
         id="removeDepot" type="button" onclick="deleteDepot(this)">
@@ -85,8 +86,8 @@ function addDepot() {
         Del
         </button>
         <div class="col-6 autocomplete">
-        <label for="depot" class="form-label mb-0">Start address</label>
-        <input type="text" class="form-control" id="depot" name="depot"
+        <label for="depot_autcomplete" class="form-label mb-0">Start address</label>
+        <input type="text" class="form-control" id="depot_autcomplete"
             placeholder="Type address, autocomplete after 5 characters, search on Enter">
         <input id="start_lat_${num_depot}" name="start_lat_${num_depot}">
         <input id="start_long_${num_depot}" name="start_long_${num_depot}">
@@ -99,8 +100,8 @@ function addDepot() {
         </div>
         </div>
         <div class="col-6 autocomplete" name="return" style="display:none">
-            <label for="depot" class="form-label mb-0">Return address</label>
-            <input type="text" class="form-control" id="depot" name="depot"
+            <label for="depot_autcomplete" class="form-label mb-0">Return address</label>
+            <input type="text" class="form-control" id="depot_autcomplete"
                 placeholder="Type address, autocomplete after 5 characters, search on Enter">
             <input id="return_lat_${num_depot}" name="return_lat_${num_depot}">
             <input id="return_long_${num_depot}" name="return_long_${num_depot}">
@@ -108,13 +109,13 @@ function addDepot() {
 
     document.getElementById('newdepot').appendChild(depot);
     /* Update depot inputs */
-    address_inputs = document.getElementsByName("depot");
+    address_inputs = document.getElementsByName("depot_autcomplete");
 };
 
 function deleteDepot(element) {
     element.closest(".row").remove();
     /* Update depot inputs */
-    address_inputs = document.getElementsByName("depot");
+    address_inputs = document.getElementsByName("depot_autcomplete");
 }
 
 
@@ -136,34 +137,51 @@ function autocomplete(inp, arr) {
     /*append the DIV element as a child of the autocomplete container:*/
     inp.parentNode.appendChild(a);
     /*for each item in the array...*/
+    console.log("arr", arr);
     for (i = 0; i < arr.length; i++) {
         /*check if the item starts with the same letters as the text field value:*/
-        if (arr[i]["properties"]["name"].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
-        /*create a DIV element for each matching element:*/
-        b = document.createElement("DIV");
-        /*make the matching letters bold:*/
-        b.innerHTML = "<strong>" + arr[i]["properties"]["name"].substr(0, val.length) + "</strong>";
-        b.innerHTML += arr[i]["properties"]["name"].substr(val.length);
-        /*insert a input field that will hold the current array item's value:*/
-        b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["name"] + "'>";
-        b.innerHTML += "<input type='hidden' value='" + arr[i]["geometry"]["coordinates"][0] + "'>";
-        b.innerHTML += "<input type='hidden' value='" + arr[i]["geometry"]["coordinates"][1] + "'>";
-        /*execute a function when someone clicks on the item value (DIV element):*/
-        b.addEventListener("click", function(e) {
-            /*insert the value for the autocomplete text field:*/
-            inp.value = this.getElementsByTagName("input")[0].value;
-            console.log("inp", inp)
-            lat = inp.nextElementSibling
-            console.log("lat", lat);
-            lat.value = this.getElementsByTagName("input")[1].value;
-            long = lat.nextElementSibling
-            console.log("long", long);
-            long.value = this.getElementsByTagName("input")[2].value;
-            /*close the list of autocompleted values,
-            (or any other open lists of autocompleted values:*/
-            closeAllLists();
-        });
-        a.appendChild(b);
+        if (arr[i]["properties"]["label"].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+            /*create a DIV element for each matching element:*/
+            b = document.createElement("DIV");
+            /*make the matching letters bold:*/
+            b.innerHTML = "<strong>" + arr[i]["properties"]["label"].substr(0, val.length) + "</strong>";
+            b.innerHTML += arr[i]["properties"]["label"].substr(val.length);
+            /*insert a input field that will hold the current array item's value:*/
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["label"] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["geometry"]["coordinates"][0] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["geometry"]["coordinates"][1] + "'>";
+            /* Add all information to dropdown */
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["street"] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["housenumber"] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["postalcode"] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["locality"] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["region"] + "'>";
+            b.innerHTML += "<input type='hidden' value='" + arr[i]["properties"]["country"] + "'>";
+            /*execute a function when someone clicks on the item value (DIV element):*/
+            b.addEventListener("click", function(e) {
+                /*insert the value for the autocomplete text field:*/
+                inp.value = this.getElementsByTagName("input")[0].value;
+                lat = inp.nextElementSibling
+                lat.value = this.getElementsByTagName("input")[1].value;
+                long = lat.nextElementSibling
+                long.value = this.getElementsByTagName("input")[2].value;
+                street = long.nextElementSibling
+                street.value = this.getElementsByTagName("input")[3].value;
+                number = street.nextElementSibling
+                number.value = this.getElementsByTagName("input")[4].value;
+                postcode = number.nextElementSibling
+                postcode.value = this.getElementsByTagName("input")[5].value;
+                city = postcode.nextElementSibling
+                city.value = this.getElementsByTagName("input")[6].value;
+                state = city.nextElementSibling
+                state.value = this.getElementsByTagName("input")[7].value;
+                country = state.nextElementSibling
+                country.value = this.getElementsByTagName("input")[8].value;
+                /*close the list of autocompleted values,
+                (or any other open lists of autocompleted values:*/
+                closeAllLists();
+            });
+            a.appendChild(b);
         }
     }
 

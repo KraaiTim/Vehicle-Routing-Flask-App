@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session, url_for)
 
+from data_processing_functions import df_routes, read_addresses, read_depots
 from flask_session import Session
-from routes import df_routes
-from geocoding import read_addresses
-from map import empty_map, locations_map, plotmap
+from jinja_functions import seconds_to_time
+from map import empty_map, locations_map, numbermap
 from random_locations import random_coords
 
 app = Flask(__name__)
@@ -15,13 +15,16 @@ app = Flask(__name__)
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
+# Custom filter
+app.jinja_env.filters["seconds_to_time"] = seconds_to_time
+
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 
-# GOAL of the application minimize the length of the longest single route among all vehicles
+# TODO GOAL of the application minimize the length of the longest single route among all vehicles
 
 ORS_api_key = ""
 
@@ -34,25 +37,64 @@ def configure() -> str:
 @app.route('/', methods=["GET", "POST"])
 def home():
     if request.method == "POST":
+        print(request.form)
         # TODO remove num vehicles and set max 15
         num_vehicles = 1
 
+        # TODO think of the flow of the application and error messages
         inputs = session["inputs"]
+        # Locations
+        if "locations" in inputs:
+            map = locations_map(inputs["location_coords"])
         if "depot" in request.form:
-            print(request.form)
-            inputs = session["inputs"]
-            if not "returnCheck" in request.form:
-                # Depot start location <> return location
-                pass
-            # Map expects coords in [Longtitude, Latitude]
+            depots = read_depots(request.form)
             # TODO change for multiple depots
-            inputs["depot"] = [float(
-                request.form.get("start_long_1")), float(request.form.get("start_lat_1"))]
-            inputs["depot_address"] = request.form.get("depot")
+            depot = depots[0][0]
+            inputs["depot"] = depot
+            inputs["depot_coords"] = [depot["longitude"], depot["latitude"]]
             session["inputs"] = inputs
             # plot map
-            map = locations_map(inputs["location_coords"], inputs["depot"])
-            return render_template('index.html', map=map._repr_html_(),  inputs=inputs)
+            map = locations_map(
+                inputs["location_coords"], inputs["depot_coords"])
+
+        # If calculate route button is pressed.
+        if "calculate_route" in request.form:
+            # TODO think about price/km zero but with a cost for dropped locations
+            # Km price from form
+            if request.form.get("kmprice"):
+                km_price = float(request.form.get("kmprice"))
+            else:
+                km_price = None
+            # Penalty from form
+            if request.form.get("missedlocation"):
+                penalty = float(request.form.get("missedlocation"))
+            else:
+                penalty = None
+            # MOT from form
+            if request.form.get("MOT") == "car":
+                mot = "driving-car"
+                inputs["mot"] = mot
+            else:
+                # Bike
+                mot = "cycling-regular"
+                inputs["mot"] = mot
+            # Objective from form
+            if request.form.get("objective") == "distance":
+                objective = "distances"
+                inputs["objective"] = objective
+            else:
+                objective = "durations"
+                inputs["objective"] = objective
+
+            # Determine the route and create the map with route
+            map, routes = numbermap(points=inputs["location_coords"],
+                                    depot=inputs["depot_coords"], api_key=ORS_api_key, objective=objective,
+                                    num_vehicles=num_vehicles, mot=mot, price_km=km_price, penalty=penalty)
+            # DF with columns: Vehicle, Location id, Street, Number, Postcode, City, Distance
+            routes_df = df_routes(inputs, routes, objective)
+            inputs["routes"] = routes_df
+            inputs["routes_total"] = routes
+            session["inputs"] = inputs
     else:
         # If api keys are not set, redirect to keys
         if ORS_api_key is None:
@@ -67,7 +109,7 @@ def home():
             else:
                 inputs = {}
                 map = empty_map()
-            return render_template('index.html', map=map._repr_html_(), inputs=inputs)
+    return render_template('index.html', map=map._repr_html_(), inputs=inputs)
 
 
 @app.route('/locations', methods=["GET", "POST"])
@@ -88,7 +130,7 @@ def locations():
             # TODO Async coordinates determination. Directly load addresses and later the coordinates
             file = request.files["formFile"]
             df = read_addresses(file)
-            coordinates = [[df.loc[i, "Lat"], df.loc[i, "Lon"]]
+            coordinates = [[df.loc[i, "latitude"], df.loc[i, "longitude"]]
                            for i in range(len(df))]
             # Update inputs
             inputs["method"] = "file"
@@ -111,52 +153,6 @@ def depots():
 def google():
     inputs = session["inputs"]
     return render_template('google.html', inputs=inputs)
-
-
-@app.route('/calculateroute', methods=["POST"])
-def calculateroute():
-    inputs = session["inputs"]
-    if request.method == "POST":
-        if request.form.get("kmprice"):
-            km_price = float(request.form.get("kmprice")) * 100
-            km_price = int(km_price)
-        else:
-            km_price = None
-        if request.form.get("missedlocation"):
-            penalty = float(request.form.get("missedlocation")) * 100
-            penalty = int(penalty)
-        else:
-            penalty = None
-
-        if request.form.get("MOT") == "car":
-            mot = "driving-car"
-            map, routes = plotmap(points=inputs["location_coords"],
-                                  depot=inputs["depot"], api_key=ORS_api_key, num_vehicles=1, mot=mot, price_km=km_price, penalty=penalty)
-            # DF with columns: Vehicle, Location id, Street, Number, Postcode, City, Distance
-            routes_df = df_routes(inputs, routes)
-            inputs["routes"] = routes_df
-            inputs["routes_total"] = routes
-            session["inputs"] = inputs
-        else:
-            # Bike
-            mot = "cycling-regular"
-            map, routes = plotmap(points=inputs["location_coords"],
-                                  depot=inputs["depot"], api_key=ORS_api_key, num_vehicles=1, mot=mot)
-            # DF with columns: Vehicle, Location id, Street, Number, Postcode, City, Distance
-            routes_df = df_routes(inputs, routes)
-            inputs["routes"] = routes_df
-            inputs["routes_total"] = routes
-            session["inputs"] = inputs
-        # TODO change to redirect
-        return render_template('index.html', map=map._repr_html_(), inputs=inputs)
-        # 1. Use all inputs to calculate the route
-        # 2. While calculating, show progress bar with
-        # 3. When route determined, redirect to index
-        # 4. On index show map
-        # 5. Below map show the totals and the locations per vehicle
-    else:
-        map = locations_map(inputs["location_coords"], inputs["depot"])
-        return render_template('index.html', map=map._repr_html_(), inputs=inputs)
 
 
 @app.route('/keys', methods=["GET", "POST"])

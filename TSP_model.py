@@ -1,4 +1,5 @@
 # Import solver from Google OR-Tools
+import numpy as np
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 # Import Distance matrix function
@@ -8,14 +9,14 @@ from distance_matrix import distancematrix
 # Using Google OR-Tools https://developers.google.com/optimization/routing/tsp
 
 
-def TSPmodel(locations, api_key, num_vehicles, mot, price_km=None, penalty=None):
+def TSPmodel(locations, api_key, objective, num_vehicles, mot, price_km=None, penalty=None):
 
-    def create_data_model(locs: list):
+    def create_data_model(locations: list):
         """Stores the distance matrix, depot and number of vehicles."""
         data = {}
         # Call distance matrix function on locations
-        # TODO multiply Distance Matrix by constant for cost per kilometer
-        data['distance_matrix'] = distancematrix(locs, api_key, mot, price_km)
+        data['distance_matrix'] = distancematrix(
+            locations, api_key, objective, mot, price_km)
         data['num_vehicles'] = num_vehicles
         # TODO implement the different start points of vehicles, remove depot
         #data['starts'] = [1, 2, 15, 16]
@@ -53,19 +54,22 @@ def TSPmodel(locations, api_key, num_vehicles, mot, price_km=None, penalty=None)
     routing.AddDimension(
         distance_callback_index,
         0,  # no slack
-        # TODO Set maximum travel distance in Front End
-        2000000,  # vehicle maximum travel distance in meters
+        3000,  # vehicle maximum capacity
         True,  # start cumul to zero
         dimension_name)
+
+    # Dimension to push the model to create evenly long routes between vehicle. Use for multi vehicle
+    # distance_dimension = routing.GetDimensionOrDie(dimension_name)
+    # # A large coefficient (100) for the global span of the routes, which is the maximum of the distances of the routes, makes the global span the predominant factor in the objective function, so the program minimizes the length of the longest route.
+    # distance_dimension.SetGlobalSpanCostCoefficient(1)
+
     # If penalty is defined, allow to drop nodes.
-    # TODO add penalty cost for missing a location. Can be different based on the country (add in front end).
+    penalty = round(penalty * 1000)
     if penalty:
         for node in range(1, len(data['distance_matrix'])):
+            # Multiply the penalty input to scale it like the price per km
             routing.AddDisjunction(
                 [manager.NodeToIndex(node)], penalty)
-
-    distance_dimension = routing.GetDimensionOrDie(dimension_name)
-    distance_dimension.SetGlobalSpanCostCoefficient(100)
 
     # Search parameters and heuristic for initial solution
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
@@ -83,6 +87,17 @@ def TSPmodel(locations, api_key, num_vehicles, mot, price_km=None, penalty=None)
         """Get vehicle routes from a solution and store them in an list of dictionaries."""
         # Get vehicle routes and store them in a dictionary. In the list of dictionaries
         # vehicle i visits location j.
+        print(f'Objective: {solution.ObjectiveValue()}')
+        dropped_nodes = []
+        dropped_cost = 0
+        for node in range(routing.Size()):
+            if routing.IsStart(node) or routing.IsEnd(node):
+                continue
+            if solution.Value(routing.NextVar(node)) == node:
+                dropped_nodes.append(manager.IndexToNode(node))
+                dropped_cost += penalty
+        print(f'Dropped cost: {dropped_cost / 1000}')
+        print(dropped_nodes)
         routes = []
         for route_nbr in range(routing.vehicles()):
             route_info = {}
@@ -104,13 +119,13 @@ def TSPmodel(locations, api_key, num_vehicles, mot, price_km=None, penalty=None)
             route_info["route_cost"] = route_distance
             route_info["cost"] = total_route_distance
             routes.append(route_info)
-        return routes
+        return dropped_nodes, routes
 
     # Display route
-    routes = routes_info(solution, routing, manager)
+    dropped_nodes, routes = routes_info(solution, routing, manager)
 
     # Display the routes.
     for i, route in enumerate(routes):
         print('Route', i, route["route"], route["cost"])
 
-    return routes
+    return dropped_nodes, routes

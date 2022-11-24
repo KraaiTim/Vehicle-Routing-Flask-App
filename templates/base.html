@@ -62,8 +62,8 @@
                     <div class="row justify-content-center">
                         <h5 class="text-center">Depot</h5>
                         <span class="text-center">
-                            <h6>Latitude: {{ inputs["depot"][0] }}</h6>
-                            <h6>Longitude: {{ inputs["depot"][1] }}</h6>
+                            <h6>Latitude: {{ inputs["depot"]["latitude"] }}</h6>
+                            <h6>Longitude: {{ inputs["depot"]["longitude"] }}</h6>
                         </span>
                         <button class="btn btn-secondary px-3 w-75" onClick="location.href='{{ url_for('depots') }}';"
                             type="button">Change depot</button>
@@ -82,7 +82,7 @@
 
                     <div class="row justify-content-center">
                         <h5 class="text-center mb-1">Parameters</h5>
-                        <form class="align-items-center" id="motform" action="/calculateroute" method="POST">
+                        <form class="align-items-center" id="motform" action="/" method="POST">
                             <div class="row justify-content-center text-center py-2">
                                 <label for="kmprice">Price per KM</label>
                                 <input type="number" class="form-control w-75" id="kmprice" name="kmprice" step="0.01"
@@ -90,7 +90,9 @@
                                 <label for="missedlocation">Cost per missed location</label>
                                 <input type="number" class="form-control w-75" id="missedlocation" name="missedlocation"
                                     step="0.01" min="0.01">
-                                <div class="mt-2" id="radios">
+                                <hr class="solid my-2">
+                                <h5 class="mt-2">Mode of Transport: </h5>
+                                <div class="mt-0" id="radios">
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="MOT" id="inlineRadio1"
                                             value="car" checked="checked">
@@ -102,6 +104,19 @@
                                         <label class="form-check-label" for="inlineRadio2">Bike</label>
                                     </div>
                                 </div>
+                                <h5 class="mt-2">Objective: </h5>
+                                <div class="mt-0" id="radios">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="objective" id="inlineRadio1"
+                                            value="distance" checked="checked">
+                                        <label class="form-check-label" for="inlineRadio1">Distance</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="objective" id="inlineRadio2"
+                                            value="duration">
+                                        <label class="form-check-label" for="inlineRadio2">Duration</label>
+                                    </div>
+                                </div>
                             </div>
                             <hr class="solid my-2">
                             <div class="row justify-content-center py-2">
@@ -110,7 +125,7 @@
                                 <button class="btn btn-primary px-3 w-75" disabled type="submit">Create
                                     Route</button>
                                 {% else %}
-                                <button class="btn btn-primary px-3 w-75" type="submit">Create
+                                <button class="btn btn-primary px-3 w-75" type="submit" name="calculate_route">Create
                                     Route</button>
                                 {% endif %}
                             </div>

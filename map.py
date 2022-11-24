@@ -1,6 +1,8 @@
 from folium import (FeatureGroup, Icon, LayerControl, Map, Marker,
                     PolyLine, Popup, TileLayer)
+import folium.plugins as plugins
 
+import matplotlib
 # Import route function
 from distance_matrix import route
 # Import TSP model
@@ -44,9 +46,10 @@ def locations_map(points, depot=None):
     LayerControl(collapsed=False).add_to(m)
     return m
 
-
 # Function to draw the map, TSP, get route coordinates and draw the route.
-def plotmap(points, depot, api_key, num_vehicles, mot, price_km=None, penalty=None):
+
+
+def numbermap(points, depot, api_key, objective, num_vehicles, mot, price_km=None, penalty=None):
     # TODO substitute below with above functions without LayerControl being in the above functions
 
     # Create map with locations and depot
@@ -62,28 +65,20 @@ def plotmap(points, depot, api_key, num_vehicles, mot, price_km=None, penalty=No
             color="green", icon='home', prefix='fa')).add_to(fg_depots)
         fg_depots.add_to(m)
 
-    fg_locations = FeatureGroup(name="Locations")
-
-    # Place markers on the Folium map with different icon for first point = depot
-    for p in points:
-        Marker(location=p, popup=Popup("{}".format(
-            ["{:.5}".format(float(coord)) for coord in p])), color="blue").add_to(fg_locations)
-    fg_locations.add_to(m)
-
     # Call TSP model
     tsp_locations = [list(reversed(depot))] + \
         [list(reversed(p)) for p in points]
-    routes = TSPmodel(locations=tsp_locations, api_key=api_key,
-                      num_vehicles=num_vehicles, mot=mot, price_km=price_km, penalty=penalty)
+    dropped_nodes, routes = TSPmodel(locations=tsp_locations, api_key=api_key,
+                                     objective=objective, num_vehicles=num_vehicles, mot=mot, price_km=price_km, penalty=penalty)
 
     colors = [
-        'red',
+        'green',
         'blue',
         'orange',
         'darkgreen',
         'purple',
         'pink',
-        'green',
+        'red',
         'gray',
         'darkred',
         'lightred',
@@ -115,7 +110,31 @@ def plotmap(points, depot, api_key, num_vehicles, mot, price_km=None, penalty=No
             PolyLine(locations=[coords_route],
                      color=colors[route_id]).add_to(fg_route)
 
-        fg_route.add_to(m)
+        # If there is a route
+        if len(route_locs["route"]) > 2:
+            # Add locations of the route to the map with numbers
+            for idx, p in enumerate(route_locs["route"]):
+                # If not depot, add marker to the route
+                if p != 0:
+                    Marker(location=points[p-1],
+                           popup=Popup("{}".format(
+                               ["{:.5}".format(float(coord)) for coord in points[p-1]])),
+                           icon=plugins.BeautifyIcon(
+                        icon="arrow-down", icon_shape="marker",
+                        number=idx,
+                        border_width=1,
+                        background_color=matplotlib.colors.cnames[colors[route_id]]
+                    )).add_to(fg_route)
+            fg_route.add_to(m)
+
+    if len(dropped_nodes) > 1:
+        dropped_locations = FeatureGroup(name="Missed locations")
+        print(dropped_nodes)
+        # Place markers on the Folium map
+        for p in dropped_nodes:
+            Marker(location=points[p-1], popup=Popup("{}".format(
+                ["{:.5}".format(float(coord)) for coord in points[p-1]])), color="blue").add_to(dropped_locations)
+        dropped_locations.add_to(m)
 
     LayerControl(collapsed=False).add_to(m)
 

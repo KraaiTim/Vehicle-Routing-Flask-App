@@ -24,7 +24,21 @@ Vehicle routing
                 <th>Number</th>
                 <th>Postcode</th>
                 <th>City</th>
-                <th>In Total: {{ inputs["routes_total"][0]["cost"] / 1000 }} kms</th>
+                <th>
+                    {% if inputs["objective"] == "distances" %}
+                    A -> B km
+                    {% else %}
+                    A -> B time
+                    {% endif %}
+
+                </th>
+                <th>
+                    {% if inputs["objective"] == "distances" %}
+                    Total: {{ (inputs["routes_total"][0]["cost"] / 1000) | round(1) }} km
+                    {% else %}
+                    Total: {{ inputs["routes_total"][0]["cost"] | seconds_to_time }}
+                    {% endif %}
+                </th>
             </tr>
             {% for key, location in inputs["routes"].iterrows() %}
             <tr>
@@ -34,7 +48,20 @@ Vehicle routing
                 <td>{{ location["number"] }}</td>
                 <td>{{ location["postcode"] }}</td>
                 <td>{{ location["city"] }}</td>
-                <td>{{ location["distance"] }} kms</td>
+                <td>
+                    {% if inputs["objective"] == "distances" %}
+                    {{ location["distance"] | round(1) }} km
+                    {% else %}
+                    {{ location["distance"] | seconds_to_time }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if inputs["objective"] == "distances" %}
+                    {{ location["cumulative"] | round(1) }} km
+                    {% else %}
+                    {{ location["cumulative"] | seconds_to_time }}
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
             </tabel>
